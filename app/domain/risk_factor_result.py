@@ -10,3 +10,4 @@ class RiskFactorResult:
     actual_value: object | None
     expected: str | None
     explanation: str
+    required: bool = True

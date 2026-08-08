@@ -63,3 +63,28 @@ def test_missing_state_is_different_from_not_matched():
     )
 
     assert missing.state != not_matched.state
+
+
+def test_risk_factor_result_is_required_by_default():
+    result = RiskFactorResult(
+        factor="TEMPERATURE",
+        state=RiskFactorState.MATCHED,
+        actual_value=18.4,
+        expected=">= 10 °C",
+        explanation="Температура соответствует условиям активности.",
+    )
+
+    assert result.required is True
+
+
+def test_risk_factor_result_can_be_optional():
+    result = RiskFactorResult(
+        factor="HUMIDITY",
+        state=RiskFactorState.MISSING,
+        actual_value=None,
+        expected="60–80 %",
+        explanation="Данные о влажности отсутствуют.",
+        required=False,
+    )
+
+    assert result.required is False
