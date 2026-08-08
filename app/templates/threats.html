@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог — PestWatch{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Клещи и вредители растений</h2>
+
+    <p>
+        PestWatch поддерживает оценку сезонного риска
+        для следующих видов:
+    </p>
+
+    <div class="threat-list">
+        {% for threat in threats %}
+            <article class="threat-card">
+                <h3>{{ threat.name }}</h3>
+
+                <p>{{ threat.description }}</p>
+
+                <p>
+                    <strong>Категория:</strong>
+                    {{ threat.category }}
+                </p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
