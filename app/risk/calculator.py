@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
-from app.domain import RiskFactorResult, WeatherData
+from app.domain import RiskContext, RiskFactorResult
 
 
 class RiskCalculator(ABC):
     @abstractmethod
     def evaluate(
         self,
-        weather: WeatherData,
+        context: RiskContext,
     ) -> tuple[RiskFactorResult, ...]:
-        ...
+        raise NotImplementedError

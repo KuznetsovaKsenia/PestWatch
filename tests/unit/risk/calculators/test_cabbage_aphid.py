@@ -5,21 +5,27 @@ import pytest
 from app.domain import (
     RiskFactorState,
     WeatherData,
+    RiskContext,
 )
 from app.risk.calculators import CabbageAphidRiskCalculator
 
 
-def create_weather(
+def create_context(
+    *,
     temperature: float | None,
     humidity: float | None,
-) -> WeatherData:
-    return WeatherData(
+) -> RiskContext:
+    weather = WeatherData(
         observed_at=datetime(2026, 8, 8, 12, 0),
         temperature=temperature,
         humidity=humidity,
         precipitation=None,
         wind_speed=None,
         soil_temperature=None,
+    )
+
+    return RiskContext(
+        weather=weather,
     )
 
 
@@ -42,7 +48,7 @@ def test_temperature_rule(
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=temperature,
             humidity=65.0,
         )
@@ -71,7 +77,7 @@ def test_humidity_rule(
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=humidity,
         )
@@ -84,7 +90,7 @@ def test_calculator_returns_factors_in_stable_order():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -102,7 +108,7 @@ def test_both_factors_are_required():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -115,7 +121,7 @@ def test_temperature_factor_preserves_actual_value():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -128,7 +134,7 @@ def test_humidity_factor_preserves_actual_value():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -141,7 +147,7 @@ def test_temperature_factor_contains_expected_range():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -154,7 +160,7 @@ def test_humidity_factor_contains_expected_range():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )
@@ -167,7 +173,7 @@ def test_factors_contain_explanations():
     calculator = CabbageAphidRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(
+        create_context(
             temperature=25.5,
             humidity=65.0,
         )

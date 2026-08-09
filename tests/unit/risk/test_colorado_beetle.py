@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from app.domain import (
+    RiskContext,
     RiskFactorState,
     SoilTemperatureEstimate,
     SoilTemperatureEstimateMethod,
@@ -11,9 +12,9 @@ from app.domain import (
 from app.risk.calculators import ColoradoBeetleRiskCalculator
 
 
-def create_weather(
+def create_context(
     estimated_temperature: float | None,
-) -> WeatherData:
+) -> RiskContext:
     estimate = None
 
     if estimated_temperature is not None:
@@ -27,13 +28,17 @@ def create_weather(
             ),
         )
 
-    return WeatherData(
+    weather = WeatherData(
         observed_at=datetime(2026, 8, 9, 12, 0),
         temperature=None,
         humidity=None,
         precipitation=None,
         wind_speed=None,
         soil_temperature=None,
+    )
+
+    return RiskContext(
+        weather=weather,
         soil_temperature_10cm_estimate=estimate,
     )
 
@@ -57,7 +62,7 @@ def test_colorado_beetle_soil_temperature_rule(
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(estimated_temperature)
+        create_context(estimated_temperature)
     )[0]
 
     assert factor.state == expected_state
@@ -67,7 +72,7 @@ def test_colorado_beetle_returns_expected_factor():
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(14.0)
+        create_context(14.0)
     )[0]
 
     assert factor.factor == "SOIL_TEMPERATURE_10CM"
@@ -77,7 +82,7 @@ def test_colorado_beetle_factor_is_required():
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(14.0)
+        create_context(14.0)
     )[0]
 
     assert factor.required is True
@@ -87,7 +92,7 @@ def test_colorado_beetle_preserves_estimated_temperature():
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(14.2)
+        create_context(14.2)
     )[0]
 
     assert factor.actual_value == 14.2
@@ -97,7 +102,7 @@ def test_colorado_beetle_contains_expected_threshold():
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(14.0)
+        create_context(14.0)
     )[0]
 
     assert factor.expected == ">= 13 °C"
@@ -117,7 +122,7 @@ def test_colorado_beetle_contains_explanation(
     calculator = ColoradoBeetleRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(estimated_temperature)
+        create_context(estimated_temperature)
     )[0]
 
     assert factor.explanation

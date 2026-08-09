@@ -3,22 +3,27 @@ from datetime import datetime
 import pytest
 
 from app.domain import (
+    RiskContext,
     RiskFactorState,
     WeatherData,
 )
 from app.risk.calculators import TickRiskCalculator
 
 
-def create_weather(
+def create_context(
     temperature: float | None,
-) -> WeatherData:
-    return WeatherData(
+) -> RiskContext:
+    weather = WeatherData(
         observed_at=datetime(2026, 8, 8, 12, 0),
         temperature=temperature,
         humidity=None,
         precipitation=None,
         wind_speed=None,
         soil_temperature=None,
+    )
+
+    return RiskContext(
+        weather=weather,
     )
 
 
@@ -40,7 +45,7 @@ def test_tick_temperature_rule(
     calculator = TickRiskCalculator()
 
     factors = calculator.evaluate(
-        create_weather(temperature),
+        create_context(temperature),
     )
 
     assert len(factors) == 1
@@ -51,7 +56,7 @@ def test_tick_returns_air_temperature_factor():
     calculator = TickRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(12.0),
+        create_context(12.0),
     )[0]
 
     assert factor.factor == "AIR_TEMPERATURE"
@@ -61,7 +66,7 @@ def test_tick_factor_is_required():
     calculator = TickRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(12.0),
+        create_context(12.0),
     )[0]
 
     assert factor.required is True
@@ -71,7 +76,7 @@ def test_tick_preserves_actual_temperature():
     calculator = TickRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(12.3),
+        create_context(12.3),
     )[0]
 
     assert factor.actual_value == 12.3
@@ -81,7 +86,7 @@ def test_tick_contains_expected_threshold():
     calculator = TickRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(12.0),
+        create_context(12.0),
     )[0]
 
     assert factor.expected == ">= 10 °C"
@@ -101,7 +106,7 @@ def test_tick_factor_contains_explanation(
     calculator = TickRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(temperature),
+        create_context(temperature),
     )[0]
 
     assert factor.explanation

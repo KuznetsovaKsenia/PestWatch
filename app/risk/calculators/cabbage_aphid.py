@@ -1,7 +1,7 @@
 from app.domain import (
     RiskFactorResult,
     RiskFactorState,
-    WeatherData,
+    RiskContext,
 )
 from app.risk.calculator import RiskCalculator
 
@@ -15,11 +15,11 @@ class CabbageAphidRiskCalculator(RiskCalculator):
 
     def evaluate(
         self,
-        weather: WeatherData,
+        context: RiskContext,
     ) -> tuple[RiskFactorResult, ...]:
         return (
-            self._evaluate_temperature(weather.temperature),
-            self._evaluate_humidity(weather.humidity),
+            self._evaluate_temperature(context.weather.temperature),
+            self._evaluate_humidity(context.weather.humidity),
         )
 
     def _evaluate_temperature(

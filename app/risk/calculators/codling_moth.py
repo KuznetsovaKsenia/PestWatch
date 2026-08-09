@@ -1,7 +1,7 @@
 from app.domain import (
     RiskFactorResult,
     RiskFactorState,
-    WeatherData,
+    RiskContext,
 )
 from app.risk.calculator import RiskCalculator
 
@@ -11,9 +11,9 @@ class CodlingMothRiskCalculator(RiskCalculator):
 
     def evaluate(
         self,
-        weather: WeatherData,
+        context: RiskContext,
     ) -> tuple[RiskFactorResult, ...]:
-        degree_days = weather.degree_days_10c
+        degree_days = context.degree_days_10c
 
         if degree_days is None:
             state = RiskFactorState.MISSING

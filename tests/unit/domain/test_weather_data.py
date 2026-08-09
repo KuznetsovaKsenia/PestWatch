@@ -1,30 +1,7 @@
-from datetime import date, datetime
-
-from app.domain import (
-    DailyTemperature,
-    DegreeDaysCalculationMethod,
-    DegreeDaysResult,
-    WeatherData,
-)
+from datetime import datetime
 
 from app.domain import WeatherData
-from app.domain import (
-    SoilTemperatureEstimate,
-    SoilTemperatureEstimateMethod,
-    WeatherData,
-)
 
-def test_weather_data_degree_days_is_none_by_default():
-    weather = WeatherData(
-        observed_at=datetime(2026, 8, 9, 12, 0),
-        temperature=20.0,
-        humidity=60.0,
-        precipitation=0.0,
-        wind_speed=2.0,
-        soil_temperature=18.0,
-    )
-
-    assert weather.degree_days_10c is None
 
 def test_weather_data_can_be_created_with_all_values():
     observed_at = datetime(2026, 8, 8, 15, 0)
@@ -101,7 +78,6 @@ def test_weather_data_new_soil_fields_are_none_by_default():
 
     assert weather.soil_temperature_6cm is None
     assert weather.soil_temperature_18cm is None
-    assert weather.soil_temperature_10cm_estimate is None
 
 
 def test_weather_data_can_store_soil_temperatures_at_6_and_18_cm():
@@ -118,62 +94,3 @@ def test_weather_data_can_store_soil_temperatures_at_6_and_18_cm():
 
     assert weather.soil_temperature_6cm == 16.0
     assert weather.soil_temperature_18cm == 10.0
-
-
-def test_weather_data_can_store_soil_temperature_estimate():
-    estimate = SoilTemperatureEstimate(
-        depth_cm=10.0,
-        temperature=14.0,
-        source_depths_cm=(6.0, 18.0),
-        source_temperatures=(16.0, 10.0),
-        method=SoilTemperatureEstimateMethod.LINEAR_INTERPOLATION,
-    )
-
-    weather = WeatherData(
-        observed_at=datetime(2026, 8, 9, 12, 0),
-        temperature=20.0,
-        humidity=60.0,
-        precipitation=0.0,
-        wind_speed=2.0,
-        soil_temperature=18.0,
-        soil_temperature_6cm=16.0,
-        soil_temperature_18cm=10.0,
-        soil_temperature_10cm_estimate=estimate,
-    )
-
-    assert weather.soil_temperature_10cm_estimate == estimate
-
-def test_weather_data_can_store_degree_days_result():
-    observations = (
-        DailyTemperature(
-            date=date(2026, 5, 1),
-            mean_temperature=12.0,
-        ),
-        DailyTemperature(
-            date=date(2026, 5, 2),
-            mean_temperature=15.0,
-        ),
-    )
-
-    degree_days = DegreeDaysResult(
-        base_temperature=10.0,
-        total=7.0,
-        period_start=date(2026, 5, 1),
-        period_end=date(2026, 5, 2),
-        observations=observations,
-        method=(
-            DegreeDaysCalculationMethod.DAILY_MEAN_ABOVE_BASE
-        ),
-    )
-
-    weather = WeatherData(
-        observed_at=datetime(2026, 8, 9, 12, 0),
-        temperature=20.0,
-        humidity=60.0,
-        precipitation=0.0,
-        wind_speed=2.0,
-        soil_temperature=18.0,
-        degree_days_10c=degree_days,
-    )
-
-    assert weather.degree_days_10c == degree_days

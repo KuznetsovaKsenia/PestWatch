@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from app.domain import (
+    RiskContext,
     RiskFactorState,
     RiskLevel,
     RiskStatus,
@@ -35,7 +36,13 @@ def evaluate(
     calculator,
     weather: WeatherData,
 ):
-    factors = calculator.evaluate(weather)
+    context = RiskContext(
+        weather=weather,
+    )
+
+    factors = calculator.evaluate(
+        context,
+    )
 
     engine = RiskEngine(
         policy=RiskPolicy(),
@@ -85,8 +92,8 @@ def test_tick_calculator_to_risk_engine(
         threat_code="TICK",
         calculator=TickRiskCalculator(),
         weather=create_weather(
-            temperature=temperature,
-        ),
+           temperature=temperature,
+       ),
     )
 
     assert result.threat_code == "TICK"
