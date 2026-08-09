@@ -14,6 +14,8 @@ class WeatherClient:
         "precipitation",
         "wind_speed_10m",
         "soil_temperature_0cm",
+        "soil_temperature_6cm",
+        "soil_temperature_18cm",
     )
 
     def __init__(
