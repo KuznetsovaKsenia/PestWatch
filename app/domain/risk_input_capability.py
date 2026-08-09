@@ -1,0 +1,7 @@
+from enum import Enum
+
+
+class RiskInputCapability(str, Enum):
+    CURRENT_WEATHER = "CURRENT_WEATHER"
+    SOIL_TEMPERATURE_10CM = "SOIL_TEMPERATURE_10CM"
+    DEGREE_DAYS_10C = "DEGREE_DAYS_10C"

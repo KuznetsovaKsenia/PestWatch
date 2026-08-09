@@ -16,6 +16,7 @@ from .daily_temperature import DailyTemperature
 from .degree_days_calculation_method import DegreeDaysCalculationMethod
 from .degree_days_result import DegreeDaysResult
 from .risk_context import RiskContext
+from .risk_input_capability import RiskInputCapability
 
 __all__ = [
     "Location",
@@ -36,4 +37,5 @@ __all__ = [
     "DegreeDaysCalculationMethod",
     "DegreeDaysResult",
     "RiskContext",
+    "RiskInputCapability",
 ]

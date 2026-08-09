@@ -3,6 +3,7 @@ from app.domain import (
     RiskLevel,
     RiskStatus,
     UserProfile,
+    RiskInputCapability,
 )
 
 
@@ -37,4 +38,11 @@ def test_risk_factor_state_values():
         RiskFactorState.MATCHED,
         RiskFactorState.NOT_MATCHED,
         RiskFactorState.MISSING,
+    }
+
+def test_risk_input_capability_values():
+    assert set(RiskInputCapability) == {
+        RiskInputCapability.CURRENT_WEATHER,
+        RiskInputCapability.SOIL_TEMPERATURE_10CM,
+        RiskInputCapability.DEGREE_DAYS_10C,
     }

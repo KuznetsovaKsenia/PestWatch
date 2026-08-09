@@ -3,6 +3,10 @@ from .calculator_registry import (
     RiskCalculatorNotFoundError,
     RiskCalculatorRegistry,
 )
+from .input_requirements import (
+    RiskInputRequirements,
+    RiskInputRequirementsNotFoundError,
+)
 from .evaluation import RiskEvaluation
 from .policy import RiskPolicy
 from .engine import RiskEngine
@@ -14,4 +18,6 @@ __all__ = [
     "RiskEvaluation",
     "RiskPolicy",
     "RiskEngine",
+    "RiskInputRequirements",
+    "RiskInputRequirementsNotFoundError",
 ]
