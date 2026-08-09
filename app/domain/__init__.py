@@ -12,6 +12,9 @@ from .weather_data import WeatherData
 from .threat_details import ThreatDetails
 from .soil_temperature_estimate import SoilTemperatureEstimate
 from .soil_temperature_estimate_method import SoilTemperatureEstimateMethod
+from .daily_temperature import DailyTemperature
+from .degree_days_calculation_method import DegreeDaysCalculationMethod
+from .degree_days_result import DegreeDaysResult
 
 __all__ = [
     "Location",
@@ -28,4 +31,7 @@ __all__ = [
     "ThreatDetails",
     "SoilTemperatureEstimate",
     "SoilTemperatureEstimateMethod",
+    "DailyTemperature",
+    "DegreeDaysCalculationMethod",
+    "DegreeDaysResult",
 ]

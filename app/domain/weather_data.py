@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from app.domain.soil_temperature_estimate import SoilTemperatureEstimate
+from app.domain.degree_days_result import DegreeDaysResult
 
 
 @dataclass(frozen=True)
@@ -15,3 +16,4 @@ class WeatherData:
     soil_temperature_6cm: float | None = None
     soil_temperature_18cm: float | None = None
     soil_temperature_10cm_estimate: SoilTemperatureEstimate | None = None
+    degree_days_10c: DegreeDaysResult | None = None

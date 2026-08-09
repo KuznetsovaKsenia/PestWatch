@@ -2,7 +2,10 @@ import os
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SECRET_KEY = os.getenv(
+        "SECRET_KEY",
+        "dev-secret-key",
+    )
 
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
@@ -15,8 +18,23 @@ class Config:
         "https://api.open-meteo.com/v1/forecast",
     )
 
+    WEATHER_ARCHIVE_API_BASE_URL = os.getenv(
+        "WEATHER_ARCHIVE_API_BASE_URL",
+        "https://archive-api.open-meteo.com/v1/archive",
+    )
+
     WEATHER_API_TIMEOUT_SECONDS = float(
-        os.getenv("WEATHER_API_TIMEOUT_SECONDS", "5")
+        os.getenv(
+            "WEATHER_API_TIMEOUT_SECONDS",
+            "5",
+        )
+    )
+
+    WEATHER_ARCHIVE_API_TIMEOUT_SECONDS = float(
+        os.getenv(
+            "WEATHER_ARCHIVE_API_TIMEOUT_SECONDS",
+            "20",
+        )
     )
 
 

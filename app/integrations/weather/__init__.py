@@ -1,5 +1,7 @@
 from .adapter import WeatherAdapter
 from .client import WeatherClient
+from .historical_adapter import HistoricalWeatherAdapter
+from .historical_client import HistoricalWeatherClient
 from .exceptions import (
     WeatherConnectionError,
     WeatherDataError,
@@ -16,4 +18,6 @@ __all__ = [
     "WeatherIntegrationError",
     "WeatherResponseError",
     "WeatherTimeoutError",
+    "HistoricalWeatherClient",
+    "HistoricalWeatherAdapter",
 ]
