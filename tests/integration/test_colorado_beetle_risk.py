@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from app.domain import (
+    RiskContext,
     RiskFactorState,
     RiskLevel,
     RiskStatus,
@@ -47,20 +48,16 @@ def evaluate(
         temperature_18cm=weather.soil_temperature_18cm,
     )
 
-    weather = WeatherData(
-        observed_at=weather.observed_at,
-        temperature=weather.temperature,
-        humidity=weather.humidity,
-        precipitation=weather.precipitation,
-        wind_speed=weather.wind_speed,
-        soil_temperature=weather.soil_temperature,
-        soil_temperature_6cm=weather.soil_temperature_6cm,
-        soil_temperature_18cm=weather.soil_temperature_18cm,
+    context = RiskContext(
+        weather=weather,
         soil_temperature_10cm_estimate=estimate,
     )
 
     calculator = ColoradoBeetleRiskCalculator()
-    factors = calculator.evaluate(weather)
+
+    factors = calculator.evaluate(
+        context
+    )
 
     engine = RiskEngine(
         policy=RiskPolicy(),

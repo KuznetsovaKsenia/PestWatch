@@ -6,15 +6,16 @@ from app.domain import (
     DailyTemperature,
     DegreeDaysCalculationMethod,
     DegreeDaysResult,
+    RiskContext,
     RiskFactorState,
     WeatherData,
 )
 from app.risk.calculators import CodlingMothRiskCalculator
 
 
-def create_weather(
+def create_context(
     total: float | None,
-) -> WeatherData:
+) -> RiskContext:
     degree_days = None
 
     if total is not None:
@@ -36,13 +37,17 @@ def create_weather(
             ),
         )
 
-    return WeatherData(
+    weather = WeatherData(
         observed_at=datetime(2026, 8, 9, 12, 0),
         temperature=None,
         humidity=None,
         precipitation=None,
         wind_speed=None,
         soil_temperature=None,
+    )
+
+    return RiskContext(
+        weather=weather,
         degree_days_10c=degree_days,
     )
 
@@ -65,7 +70,7 @@ def test_codling_moth_degree_days_rule(
     calculator = CodlingMothRiskCalculator()
 
     factor = calculator.evaluate(
-        create_weather(total)
+        create_context(total)
     )[0]
 
     assert factor.state == expected_state
@@ -73,7 +78,7 @@ def test_codling_moth_degree_days_rule(
 
 def test_codling_moth_returns_expected_factor():
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(130.0)
+        create_context(130.0)
     )[0]
 
     assert factor.factor == "DEGREE_DAYS_ABOVE_10C"
@@ -81,7 +86,7 @@ def test_codling_moth_returns_expected_factor():
 
 def test_codling_moth_factor_is_required():
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(130.0)
+        create_context(130.0)
     )[0]
 
     assert factor.required is True
@@ -89,7 +94,7 @@ def test_codling_moth_factor_is_required():
 
 def test_codling_moth_preserves_degree_days_total():
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(137.4)
+        create_context(137.4)
     )[0]
 
     assert factor.actual_value == 137.4
@@ -97,7 +102,7 @@ def test_codling_moth_preserves_degree_days_total():
 
 def test_codling_moth_missing_has_no_actual_value():
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(None)
+        create_context(None)
     )[0]
 
     assert factor.actual_value is None
@@ -105,7 +110,7 @@ def test_codling_moth_missing_has_no_actual_value():
 
 def test_codling_moth_contains_expected_threshold():
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(130.0)
+        create_context(130.0)
     )[0]
 
     assert "130" in factor.expected
@@ -122,7 +127,7 @@ def test_codling_moth_contains_expected_threshold():
 )
 def test_codling_moth_contains_explanation(total):
     factor = CodlingMothRiskCalculator().evaluate(
-        create_weather(total)
+        create_context(total)
     )[0]
 
     assert factor.explanation

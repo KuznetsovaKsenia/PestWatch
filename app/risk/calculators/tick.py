@@ -1,7 +1,7 @@
 from app.domain import (
     RiskFactorResult,
     RiskFactorState,
-    WeatherData,
+    RiskContext,
 )
 from app.risk.calculator import RiskCalculator
 
@@ -10,10 +10,10 @@ class TickRiskCalculator(RiskCalculator):
     TEMPERATURE_THRESHOLD = 10.0
 
     def evaluate(
-        self,
-        weather: WeatherData,
-    ) -> tuple[RiskFactorResult, ...]:
-        temperature = weather.temperature
+    self,
+    context: RiskContext,
+) -> tuple[RiskFactorResult, ...]:
+        temperature = context.weather.temperature
 
         if temperature is None:
             state = RiskFactorState.MISSING

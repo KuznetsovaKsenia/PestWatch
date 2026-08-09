@@ -1,7 +1,7 @@
 from app.domain import (
     RiskFactorResult,
     RiskFactorState,
-    WeatherData,
+    RiskContext,
 )
 from app.risk.calculator import RiskCalculator
 
@@ -11,9 +11,9 @@ class ColoradoBeetleRiskCalculator(RiskCalculator):
 
     def evaluate(
         self,
-        weather: WeatherData,
+        context: RiskContext,
     ) -> tuple[RiskFactorResult, ...]:
-        estimate = weather.soil_temperature_10cm_estimate
+        estimate = context.soil_temperature_10cm_estimate
 
         if estimate is None:
             state = RiskFactorState.MISSING

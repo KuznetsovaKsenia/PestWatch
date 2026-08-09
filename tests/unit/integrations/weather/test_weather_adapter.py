@@ -43,7 +43,7 @@ def test_adapter_maps_complete_payload():
     assert weather.soil_temperature == 18.0
     assert weather.soil_temperature_6cm == 16.0
     assert weather.soil_temperature_18cm == 10.0
-    assert weather.soil_temperature_10cm_estimate is None
+
 
 def test_adapter_maps_missing_optional_values_to_none():
     payload = {
@@ -64,7 +64,6 @@ def test_adapter_maps_missing_optional_values_to_none():
     assert weather.soil_temperature is None
     assert weather.soil_temperature_6cm is None
     assert weather.soil_temperature_18cm is None
-    assert weather.soil_temperature_10cm_estimate is None
 
 
 def test_adapter_preserves_zero_values():

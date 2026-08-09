@@ -1,8 +1,8 @@
-from dataclasses import replace
 from datetime import date, datetime, timedelta
 
 from app.domain import (
     DailyTemperature,
+    RiskContext,
     RiskFactorState,
     RiskLevel,
     RiskStatus,
@@ -47,13 +47,13 @@ def evaluate(
         observations
     )
 
-    weather = replace(
-        create_weather(),
+    context = RiskContext(
+        weather=create_weather(),
         degree_days_10c=degree_days,
     )
 
     factors = CodlingMothRiskCalculator().evaluate(
-        weather
+        context
     )
 
     return RiskEngine(
