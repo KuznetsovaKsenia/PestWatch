@@ -1,7 +1,9 @@
 from .cabbage_aphid import CabbageAphidRiskCalculator
+from .colorado_beetle import ColoradoBeetleRiskCalculator
 from .tick import TickRiskCalculator
 
 __all__ = [
     "CabbageAphidRiskCalculator",
+    "ColoradoBeetleRiskCalculator",
     "TickRiskCalculator",
 ]

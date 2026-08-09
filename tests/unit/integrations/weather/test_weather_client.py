@@ -50,7 +50,9 @@ def test_client_sends_expected_request(mock_get):
                 "relative_humidity_2m,"
                 "precipitation,"
                 "wind_speed_10m,"
-                "soil_temperature_0cm"
+                "soil_temperature_0cm,"
+                "soil_temperature_6cm,"
+                "soil_temperature_18cm"
             ),
             "temperature_unit": "celsius",
             "wind_speed_unit": "ms",

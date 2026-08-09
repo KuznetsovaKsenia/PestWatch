@@ -37,4 +37,6 @@ class WeatherAdapter:
             precipitation=current.get("precipitation"),
             wind_speed=current.get("wind_speed_10m"),
             soil_temperature=current.get("soil_temperature_0cm"),
+            soil_temperature_6cm=current.get("soil_temperature_6cm"),
+            soil_temperature_18cm=current.get("soil_temperature_18cm"),
         )

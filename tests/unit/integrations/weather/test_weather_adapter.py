@@ -17,7 +17,9 @@ def test_adapter_maps_complete_payload():
             "relative_humidity_2m": 67.0,
             "precipitation": 1.2,
             "wind_speed_10m": 3.2,
-            "soil_temperature_0cm": 16.1,
+            "soil_temperature_0cm": 18.0,
+            "soil_temperature_6cm": 16.0,
+            "soil_temperature_18cm": 10.0,
         }
     }
 
@@ -38,8 +40,10 @@ def test_adapter_maps_complete_payload():
     assert weather.humidity == 67.0
     assert weather.precipitation == 1.2
     assert weather.wind_speed == 3.2
-    assert weather.soil_temperature == 16.1
-
+    assert weather.soil_temperature == 18.0
+    assert weather.soil_temperature_6cm == 16.0
+    assert weather.soil_temperature_18cm == 10.0
+    assert weather.soil_temperature_10cm_estimate is None
 
 def test_adapter_maps_missing_optional_values_to_none():
     payload = {
@@ -58,6 +62,9 @@ def test_adapter_maps_missing_optional_values_to_none():
     assert weather.precipitation is None
     assert weather.wind_speed is None
     assert weather.soil_temperature is None
+    assert weather.soil_temperature_6cm is None
+    assert weather.soil_temperature_18cm is None
+    assert weather.soil_temperature_10cm_estimate is None
 
 
 def test_adapter_preserves_zero_values():
@@ -69,6 +76,8 @@ def test_adapter_preserves_zero_values():
             "precipitation": 0.0,
             "wind_speed_10m": 0.0,
             "soil_temperature_0cm": 0.0,
+            "soil_temperature_6cm": 0.0,
+            "soil_temperature_18cm": 0.0,
         }
     }
 
@@ -90,6 +99,12 @@ def test_adapter_preserves_zero_values():
 
     assert weather.soil_temperature == 0.0
     assert weather.soil_temperature is not None
+
+    assert weather.soil_temperature_6cm == 0.0
+    assert weather.soil_temperature_6cm is not None
+
+    assert weather.soil_temperature_18cm == 0.0
+    assert weather.soil_temperature_18cm is not None
 
 
 def test_adapter_rejects_missing_current():

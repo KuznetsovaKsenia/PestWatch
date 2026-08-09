@@ -10,6 +10,8 @@ from .threat import Threat
 from .user_profile import UserProfile
 from .weather_data import WeatherData
 from .threat_details import ThreatDetails
+from .soil_temperature_estimate import SoilTemperatureEstimate
+from .soil_temperature_estimate_method import SoilTemperatureEstimateMethod
 
 __all__ = [
     "Location",
@@ -24,4 +26,6 @@ __all__ = [
     "UserProfile",
     "WeatherData",
     "ThreatDetails",
+    "SoilTemperatureEstimate",
+    "SoilTemperatureEstimateMethod",
 ]

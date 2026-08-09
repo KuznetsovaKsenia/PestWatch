@@ -1,6 +1,11 @@
 from datetime import datetime
 
 from app.domain import WeatherData
+from app.domain import (
+    SoilTemperatureEstimate,
+    SoilTemperatureEstimateMethod,
+    WeatherData,
+)
 
 
 def test_weather_data_can_be_created_with_all_values():
@@ -64,3 +69,58 @@ def test_weather_data_distinguishes_missing_value_from_zero():
 
     assert weather.soil_temperature == 0.0
     assert weather.soil_temperature is not None
+
+
+def test_weather_data_new_soil_fields_are_none_by_default():
+    weather = WeatherData(
+        observed_at=datetime(2026, 8, 9, 12, 0),
+        temperature=20.0,
+        humidity=60.0,
+        precipitation=0.0,
+        wind_speed=2.0,
+        soil_temperature=18.0,
+    )
+
+    assert weather.soil_temperature_6cm is None
+    assert weather.soil_temperature_18cm is None
+    assert weather.soil_temperature_10cm_estimate is None
+
+
+def test_weather_data_can_store_soil_temperatures_at_6_and_18_cm():
+    weather = WeatherData(
+        observed_at=datetime(2026, 8, 9, 12, 0),
+        temperature=20.0,
+        humidity=60.0,
+        precipitation=0.0,
+        wind_speed=2.0,
+        soil_temperature=18.0,
+        soil_temperature_6cm=16.0,
+        soil_temperature_18cm=10.0,
+    )
+
+    assert weather.soil_temperature_6cm == 16.0
+    assert weather.soil_temperature_18cm == 10.0
+
+
+def test_weather_data_can_store_soil_temperature_estimate():
+    estimate = SoilTemperatureEstimate(
+        depth_cm=10.0,
+        temperature=14.0,
+        source_depths_cm=(6.0, 18.0),
+        source_temperatures=(16.0, 10.0),
+        method=SoilTemperatureEstimateMethod.LINEAR_INTERPOLATION,
+    )
+
+    weather = WeatherData(
+        observed_at=datetime(2026, 8, 9, 12, 0),
+        temperature=20.0,
+        humidity=60.0,
+        precipitation=0.0,
+        wind_speed=2.0,
+        soil_temperature=18.0,
+        soil_temperature_6cm=16.0,
+        soil_temperature_18cm=10.0,
+        soil_temperature_10cm_estimate=estimate,
+    )
+
+    assert weather.soil_temperature_10cm_estimate == estimate
