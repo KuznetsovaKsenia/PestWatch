@@ -1,5 +1,6 @@
 from app.domain import (
     DailyTemperature,
+    RiskContext,
     RiskResult,
     WeatherData,
 )
@@ -32,6 +33,28 @@ class SingleThreatRiskEvaluator:
             tuple[DailyTemperature, ...] | None
         ) = None,
     ) -> RiskResult:
+        result, _ = self.evaluate_with_context(
+            threat_code,
+            weather=weather,
+            historical_temperatures=(
+                historical_temperatures
+            ),
+        )
+
+        return result
+
+    def evaluate_with_context(
+        self,
+        threat_code: str,
+        *,
+        weather: WeatherData | None = None,
+        historical_temperatures: (
+            tuple[DailyTemperature, ...] | None
+        ) = None,
+    ) -> tuple[
+        RiskResult,
+        RiskContext,
+    ]:
         context = self._context_preparer.prepare(
             threat_code,
             weather=weather,
@@ -48,7 +71,9 @@ class SingleThreatRiskEvaluator:
             context
         )
 
-        return self._engine.evaluate(
+        result = self._engine.evaluate(
             threat_code=threat_code,
             factors=factors,
         )
+
+        return result, context

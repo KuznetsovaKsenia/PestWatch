@@ -1,6 +1,7 @@
 from datetime import date
 
 from app.domain import (
+    AssessmentInputSnapshot,
     Location,
     RiskInputCapability,
     RiskResult,
@@ -49,8 +50,60 @@ class RiskAssessmentOrchestrator:
         assessment_date: date,
         historical_start_date: date | None = None,
     ) -> tuple[RiskResult, ...]:
-        threats = self._threat_service.get_threats_for_profile(
-            profile
+        results, _ = self._evaluate(
+            location=location,
+            profile=profile,
+            assessment_date=assessment_date,
+            historical_start_date=(
+                historical_start_date
+            ),
+            capture_snapshot=False,
+        )
+
+        return results
+
+    def evaluate_with_snapshot(
+        self,
+        *,
+        location: Location,
+        profile: UserProfile,
+        assessment_date: date,
+        historical_start_date: date | None = None,
+    ) -> tuple[
+        tuple[RiskResult, ...],
+        AssessmentInputSnapshot,
+    ]:
+        results, snapshot = self._evaluate(
+            location=location,
+            profile=profile,
+            assessment_date=assessment_date,
+            historical_start_date=(
+                historical_start_date
+            ),
+            capture_snapshot=True,
+        )
+
+        assert snapshot is not None
+
+        return results, snapshot
+
+    def _evaluate(
+        self,
+        *,
+        location: Location,
+        profile: UserProfile,
+        assessment_date: date,
+        historical_start_date: date | None,
+        capture_snapshot: bool,
+    ) -> tuple[
+        tuple[RiskResult, ...],
+        AssessmentInputSnapshot | None,
+    ]:
+        threats = (
+            self._threat_service
+            .get_threats_for_profile(
+                profile
+            )
         )
 
         requirements_by_threat = {
@@ -60,12 +113,17 @@ class RiskAssessmentOrchestrator:
             for threat in threats
         }
 
-        required_capabilities = frozenset().union(
-            *requirements_by_threat.values()
+        required_capabilities = (
+            frozenset().union(
+                *requirements_by_threat.values()
+            )
         )
 
         weather = None
         historical_temperatures = None
+
+        soil_temperature_estimate = None
+        degree_days = None
 
         failed_capabilities: dict[
             RiskInputCapability,
@@ -78,13 +136,15 @@ class RiskAssessmentOrchestrator:
         ):
             try:
                 weather = (
-                    self._weather_service.get_current_weather(
+                    self._weather_service
+                    .get_current_weather(
                         location
                     )
                 )
             except WeatherIntegrationError as exc:
                 failed_capabilities[
-                    RiskInputCapability.CURRENT_WEATHER
+                    RiskInputCapability
+                    .CURRENT_WEATHER
                 ] = str(exc)
 
         if (
@@ -97,7 +157,10 @@ class RiskAssessmentOrchestrator:
                     "for selected threats."
                 )
 
-            if historical_start_date > assessment_date:
+            if (
+                historical_start_date
+                > assessment_date
+            ):
                 raise HistoricalPeriodRequiredError(
                     "Historical start date cannot be "
                     "after assessment date."
@@ -108,21 +171,26 @@ class RiskAssessmentOrchestrator:
                     self._historical_weather_service
                     .get_daily_temperatures(
                         location=location,
-                        start_date=historical_start_date,
+                        start_date=(
+                            historical_start_date
+                        ),
                         end_date=assessment_date,
                     )
                 )
             except WeatherIntegrationError as exc:
                 failed_capabilities[
-                    RiskInputCapability.DEGREE_DAYS_10C
+                    RiskInputCapability
+                    .DEGREE_DAYS_10C
                 ] = str(exc)
 
         results = []
 
         for threat in threats:
-            capabilities = requirements_by_threat[
-                threat.code
-            ]
+            capabilities = (
+                requirements_by_threat[
+                    threat.code
+                ]
+            )
 
             capability_error = (
                 self._find_capability_error(
@@ -137,33 +205,78 @@ class RiskAssessmentOrchestrator:
                 results.append(
                     self._error_result(
                         threat_code=threat.code,
-                        explanation=capability_error,
+                        explanation=(
+                            capability_error
+                        ),
                     )
                 )
                 continue
 
             threat_weather = (
                 weather
-                if RiskInputCapability.CURRENT_WEATHER
-                in capabilities
+                if (
+                    RiskInputCapability
+                    .CURRENT_WEATHER
+                    in capabilities
+                )
                 else None
             )
 
             threat_historical_temperatures = (
                 historical_temperatures
-                if RiskInputCapability.DEGREE_DAYS_10C
-                in capabilities
+                if (
+                    RiskInputCapability
+                    .DEGREE_DAYS_10C
+                    in capabilities
+                )
                 else None
             )
 
             try:
-                result = self._evaluator.evaluate(
-                    threat.code,
-                    weather=threat_weather,
-                    historical_temperatures=(
-                        threat_historical_temperatures
-                    ),
-                )
+                if capture_snapshot:
+                    (
+                        result,
+                        context,
+                    ) = (
+                        self._evaluator
+                        .evaluate_with_context(
+                            threat.code,
+                            weather=threat_weather,
+                            historical_temperatures=(
+                                threat_historical_temperatures
+                            ),
+                        )
+                    )
+
+                    if (
+                        context
+                        .soil_temperature_10cm_estimate
+                        is not None
+                    ):
+                        soil_temperature_estimate = (
+                            context
+                            .soil_temperature_10cm_estimate
+                        )
+
+                    if (
+                        context.degree_days_10c
+                        is not None
+                    ):
+                        degree_days = (
+                            context.degree_days_10c
+                        )
+
+                else:
+                    result = (
+                        self._evaluator.evaluate(
+                            threat.code,
+                            weather=threat_weather,
+                            historical_temperatures=(
+                                threat_historical_temperatures
+                            ),
+                        )
+                    )
+
             except RiskInputUnavailableError as exc:
                 result = self._error_result(
                     threat_code=threat.code,
@@ -172,7 +285,21 @@ class RiskAssessmentOrchestrator:
 
             results.append(result)
 
-        return tuple(results)
+        snapshot = None
+
+        if capture_snapshot:
+            snapshot = AssessmentInputSnapshot(
+                current_weather=weather,
+                soil_temperature_10cm_estimate=(
+                    soil_temperature_estimate
+                ),
+                degree_days_10c=degree_days,
+                historical_observations=(
+                    historical_temperatures
+                ),
+            )
+
+        return tuple(results), snapshot
 
     @staticmethod
     def _find_capability_error(
