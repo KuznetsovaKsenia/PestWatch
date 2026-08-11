@@ -1,3 +1,6 @@
+from .assessment_history_service import (
+    AssessmentHistoryService,
+)
 from .assessment_service import AssessmentService
 from .historical_weather_service import (
     HistoricalWeatherService,
@@ -11,6 +14,7 @@ from .weather_service import WeatherService
 
 
 __all__ = [
+    "AssessmentHistoryService",
     "AssessmentService",
     "HistoricalPeriodRequiredError",
     "HistoricalWeatherService",

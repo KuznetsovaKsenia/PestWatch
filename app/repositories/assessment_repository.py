@@ -18,6 +18,7 @@ from app.domain import (
     UserProfile,
     WeatherData,
 )
+from app.domain.assessment_summary import AssessmentSummary
 from app.models import (
     AssessmentInputSnapshotModel,
     AssessmentModel,
@@ -39,6 +40,23 @@ class AssessmentRepository:
         db.session.commit()
 
         return self._to_domain(model)
+
+    def get_all(
+        self,
+    ) -> tuple[AssessmentSummary, ...]:
+        models = db.session.execute(
+            db.select(
+                AssessmentModel
+            ).order_by(
+                AssessmentModel.created_at.desc(),
+                AssessmentModel.id.desc(),
+            )
+        ).scalars().all()
+
+        return tuple(
+            self._to_summary(model)
+            for model in models
+        )
 
     def get_by_id(
         self,
@@ -256,6 +274,26 @@ class AssessmentRepository:
         ]
 
         return model
+
+    @staticmethod
+    def _to_summary(
+        model: AssessmentModel,
+    ) -> AssessmentSummary:
+        return AssessmentSummary(
+            id=model.id,
+            created_at=model.created_at,
+            assessment_date=model.assessment_date,
+            profile=UserProfile(
+                model.profile
+            ),
+            location=Location(
+                name=model.location_name,
+                region=model.location_region,
+                country=model.location_country,
+                latitude=model.location_latitude,
+                longitude=model.location_longitude,
+            ),
+        )
 
     def _to_domain(
         self,
