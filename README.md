@@ -151,6 +151,12 @@ python -m pip install -r requirements.txt
 
 ## Запуск приложения
 
+Инициализация БД:
+
+```powershell
+flask --app app init-db
+```
+
 Запустить Flask-приложение:
 
 ```powershell
