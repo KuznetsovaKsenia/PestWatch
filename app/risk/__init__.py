@@ -11,6 +11,9 @@ from .context_preparer import (
     RiskContextPreparer,
     RiskInputUnavailableError,
 )
+from .single_threat_evaluator import (
+    SingleThreatRiskEvaluator,
+)
 from .evaluation import RiskEvaluation
 from .policy import RiskPolicy
 from .engine import RiskEngine
@@ -26,4 +29,5 @@ __all__ = [
     "RiskInputRequirementsNotFoundError",
     "RiskContextPreparer",
     "RiskInputUnavailableError",
+    "SingleThreatRiskEvaluator",
 ]
