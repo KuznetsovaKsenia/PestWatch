@@ -17,6 +17,7 @@ from .degree_days_calculation_method import DegreeDaysCalculationMethod
 from .degree_days_result import DegreeDaysResult
 from .risk_context import RiskContext
 from .risk_input_capability import RiskInputCapability
+from .assessment import Assessment
 
 __all__ = [
     "Location",
@@ -38,4 +39,5 @@ __all__ = [
     "DegreeDaysResult",
     "RiskContext",
     "RiskInputCapability",
+    "Assessment",
 ]
