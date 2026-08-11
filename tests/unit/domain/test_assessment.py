@@ -9,6 +9,7 @@ from app.domain import (
     RiskResult,
     RiskStatus,
     UserProfile,
+    AssessmentInputSnapshot,
 )
 
 
@@ -52,6 +53,7 @@ def test_assessment_can_be_created_before_persistence():
         profile=UserProfile.HUMAN,
         location=create_location(),
         historical_start_date=None,
+        input_snapshot=AssessmentInputSnapshot(),
         risk_results=(
             create_risk_result(),
         ),
@@ -84,6 +86,7 @@ def test_assessment_preserves_identity_and_metadata():
         profile=UserProfile.HUMAN,
         location=location,
         historical_start_date=None,
+        input_snapshot=AssessmentInputSnapshot(),
         risk_results=(
             create_risk_result(),
         ),
@@ -124,6 +127,7 @@ def test_assessment_preserves_risk_results():
         location=create_location(),
         historical_start_date=None,
         risk_results=results,
+        input_snapshot=AssessmentInputSnapshot(),
     )
 
     assert assessment.risk_results is results
@@ -153,6 +157,7 @@ def test_assessment_can_preserve_historical_period():
         profile=UserProfile.GARDEN,
         location=create_location(),
         historical_start_date=start_date,
+        input_snapshot=AssessmentInputSnapshot(),
         risk_results=(
             create_risk_result(
                 "CODLING_MOTH"
@@ -190,6 +195,7 @@ def test_historical_start_date_cannot_be_after_assessment_date():
             ),
             profile=UserProfile.GARDEN,
             location=create_location(),
+            input_snapshot=AssessmentInputSnapshot(),
             historical_start_date=date(
                 2026,
                 8,
@@ -222,6 +228,7 @@ def test_assessment_allows_empty_risk_results():
         location=create_location(),
         historical_start_date=None,
         risk_results=(),
+        input_snapshot=AssessmentInputSnapshot(),
     )
 
     assert assessment.risk_results == ()

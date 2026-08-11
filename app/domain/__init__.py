@@ -18,6 +18,9 @@ from .degree_days_result import DegreeDaysResult
 from .risk_context import RiskContext
 from .risk_input_capability import RiskInputCapability
 from .assessment import Assessment
+from .assessment_input_snapshot import (
+    AssessmentInputSnapshot,
+)
 
 __all__ = [
     "Location",
@@ -40,4 +43,5 @@ __all__ = [
     "RiskContext",
     "RiskInputCapability",
     "Assessment",
+    "AssessmentInputSnapshot",
 ]

@@ -4,6 +4,9 @@ from datetime import date, datetime
 from app.domain.location import Location
 from app.domain.risk_result import RiskResult
 from app.domain.user_profile import UserProfile
+from app.domain.assessment_input_snapshot import (
+    AssessmentInputSnapshot,
+)
 
 
 @dataclass(frozen=True)
@@ -15,6 +18,7 @@ class Assessment:
     location: Location
     historical_start_date: date | None
     risk_results: tuple[RiskResult, ...]
+    input_snapshot: AssessmentInputSnapshot
 
     def __post_init__(self):
         if (

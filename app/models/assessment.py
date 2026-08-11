@@ -62,3 +62,10 @@ class AssessmentModel(db.Model):
     cascade="all, delete-orphan",
     order_by="RiskResultModel.id",
     )
+
+    input_snapshot = db.relationship(
+    "AssessmentInputSnapshotModel",
+    back_populates="assessment",
+    cascade="all, delete-orphan",
+    uselist=False,
+    )
