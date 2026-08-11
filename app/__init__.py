@@ -1,4 +1,4 @@
-from flask import Flask, app, render_template
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 from app.config.settings import Config
@@ -13,10 +13,30 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     from app import models  # noqa: F401
-    from app.controllers import threat_api, threat_web
+    from app.bootstrap import build_assessment_services
+    from app.controllers import (
+        create_assessment_api,
+        threat_api,
+        threat_web,
+    )
+
+    (
+        assessment_execution_service,
+        assessment_history_service,
+    ) = build_assessment_services(app.config)
 
     app.register_blueprint(threat_api)
     app.register_blueprint(threat_web)
+    app.register_blueprint(
+        create_assessment_api(
+            execution_service=(
+                assessment_execution_service
+            ),
+            history_service=(
+                assessment_history_service
+            ),
+        )
+    )
 
     @app.get("/")
     def index():
