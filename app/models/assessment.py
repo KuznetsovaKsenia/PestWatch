@@ -55,3 +55,10 @@ class AssessmentModel(db.Model):
         db.Date,
         nullable=True,
     )
+
+    risk_results = db.relationship(
+    "RiskResultModel",
+    back_populates="assessment",
+    cascade="all, delete-orphan",
+    order_by="RiskResultModel.id",
+    )
