@@ -4,10 +4,13 @@ from app.domain import (
     Location,
     RiskInputCapability,
     RiskResult,
+    RiskStatus,
     UserProfile,
 )
+from app.integrations.weather import WeatherIntegrationError
 from app.risk import (
     RiskInputRequirements,
+    RiskInputUnavailableError,
     SingleThreatRiskEvaluator,
 )
 from app.services.historical_weather_service import (
@@ -62,16 +65,27 @@ class RiskAssessmentOrchestrator:
         )
 
         weather = None
+        historical_temperatures = None
+
+        failed_capabilities: dict[
+            RiskInputCapability,
+            str,
+        ] = {}
 
         if (
             RiskInputCapability.CURRENT_WEATHER
             in required_capabilities
         ):
-            weather = self._weather_service.get_current_weather(
-                location
-            )
-
-        historical_temperatures = None
+            try:
+                weather = (
+                    self._weather_service.get_current_weather(
+                        location
+                    )
+                )
+            except WeatherIntegrationError as exc:
+                failed_capabilities[
+                    RiskInputCapability.CURRENT_WEATHER
+                ] = str(exc)
 
         if (
             RiskInputCapability.DEGREE_DAYS_10C
@@ -89,14 +103,19 @@ class RiskAssessmentOrchestrator:
                     "after assessment date."
                 )
 
-            historical_temperatures = (
-                self._historical_weather_service
-                .get_daily_temperatures(
-                    location=location,
-                    start_date=historical_start_date,
-                    end_date=assessment_date,
+            try:
+                historical_temperatures = (
+                    self._historical_weather_service
+                    .get_daily_temperatures(
+                        location=location,
+                        start_date=historical_start_date,
+                        end_date=assessment_date,
+                    )
                 )
-            )
+            except WeatherIntegrationError as exc:
+                failed_capabilities[
+                    RiskInputCapability.DEGREE_DAYS_10C
+                ] = str(exc)
 
         results = []
 
@@ -104,6 +123,24 @@ class RiskAssessmentOrchestrator:
             capabilities = requirements_by_threat[
                 threat.code
             ]
+
+            capability_error = (
+                self._find_capability_error(
+                    capabilities=capabilities,
+                    failed_capabilities=(
+                        failed_capabilities
+                    ),
+                )
+            )
+
+            if capability_error is not None:
+                results.append(
+                    self._error_result(
+                        threat_code=threat.code,
+                        explanation=capability_error,
+                    )
+                )
+                continue
 
             threat_weather = (
                 weather
@@ -119,14 +156,53 @@ class RiskAssessmentOrchestrator:
                 else None
             )
 
-            result = self._evaluator.evaluate(
-                threat.code,
-                weather=threat_weather,
-                historical_temperatures=(
-                    threat_historical_temperatures
-                ),
-            )
+            try:
+                result = self._evaluator.evaluate(
+                    threat.code,
+                    weather=threat_weather,
+                    historical_temperatures=(
+                        threat_historical_temperatures
+                    ),
+                )
+            except RiskInputUnavailableError as exc:
+                result = self._error_result(
+                    threat_code=threat.code,
+                    explanation=str(exc),
+                )
 
             results.append(result)
 
         return tuple(results)
+
+    @staticmethod
+    def _find_capability_error(
+        *,
+        capabilities: frozenset[
+            RiskInputCapability
+        ],
+        failed_capabilities: dict[
+            RiskInputCapability,
+            str,
+        ],
+    ) -> str | None:
+        for capability in capabilities:
+            if capability in failed_capabilities:
+                return failed_capabilities[
+                    capability
+                ]
+
+        return None
+
+    @staticmethod
+    def _error_result(
+        *,
+        threat_code: str,
+        explanation: str,
+    ) -> RiskResult:
+        return RiskResult(
+            threat_code=threat_code,
+            status=RiskStatus.ERROR,
+            risk_level=None,
+            factors=(),
+            explanation=explanation,
+        )
