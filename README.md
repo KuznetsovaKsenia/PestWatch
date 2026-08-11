@@ -151,6 +151,12 @@ python -m pip install -r requirements.txt
 
 ## Запуск приложения
 
+Инициализация БД:
+
+```powershell
+flask --app app init-db
+```
+
 Запустить Flask-приложение:
 
 ```powershell
@@ -177,14 +183,6 @@ Ctrl+C
 python -m pytest
 ```
 
-На этапе EPIC-01 тестовый набор проверяет:
-
-- создание Flask-приложения;
-- доступность главной страницы;
-- наличие названия `PestWatch` в HTML;
-- использование отдельной SQLite in-memory database в тестах;
-- инициализацию SQLAlchemy.
-
 ## Локальная конфигурация
 
 Пример переменных окружения находится в:
@@ -208,25 +206,3 @@ python -m pytest
 - `__pycache__`;
 - `.pytest_cache`;
 - другие локальные служебные файлы.
-
-## Текущий статус разработки
-
-Проект развивается поэтапно.
-
-Текущий этап:
-
-```text
-EPIC-01 — Project Bootstrap
-```
-
-На этом этапе реализована техническая основа приложения:
-
-- структура проекта;
-- Flask application;
-- базовый web-интерфейс;
-- SQLAlchemy;
-- SQLite configuration;
-- тестовая инфраструктура;
-- integration tests.
-
-Предметная модель, Weather API и Risk Engine реализуются в следующих EPIC.

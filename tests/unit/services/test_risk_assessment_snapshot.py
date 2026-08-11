@@ -102,6 +102,7 @@ class FakeContext:
     degree_days_10c: (
         DegreeDaysResult | None
     ) = None
+    saturation_deficit_mm_hg: float | None = None
 
 
 class FakeEvaluator:
@@ -118,6 +119,7 @@ class FakeEvaluator:
         *,
         weather=None,
         historical_temperatures=None,
+        degree_days_season_started=None,
     ):
         self.calls.append(
             (
@@ -462,3 +464,52 @@ def test_snapshot_does_not_invent_failed_weather_input():
     )
 
     assert evaluator.calls == []
+
+def test_snapshot_captures_saturation_deficit():
+    weather = create_weather()
+    threat = create_threat(
+        "TICK",
+        "HUMAN",
+    )
+
+    orchestrator = RiskAssessmentOrchestrator(
+        threat_service=FakeThreatService(
+            [threat]
+        ),
+        weather_service=FakeWeatherService(
+            weather=weather
+        ),
+        historical_weather_service=(
+            FakeHistoricalWeatherService()
+        ),
+        input_requirements=FakeRequirements(
+            {
+                "TICK": frozenset({
+                    RiskInputCapability.CURRENT_WEATHER,
+                    RiskInputCapability.SATURATION_DEFICIT,
+                }),
+            }
+        ),
+        evaluator=FakeEvaluator(
+            {
+                "TICK": FakeContext(
+                    saturation_deficit_mm_hg=1.25,
+                ),
+            }
+        ),
+    )
+
+    _, snapshot = orchestrator.evaluate_with_snapshot(
+        location=create_location(),
+        profile=UserProfile.HUMAN,
+        assessment_date=date(
+            2026,
+            8,
+            11,
+        ),
+    )
+
+    assert (
+        snapshot.saturation_deficit_mm_hg
+        == 1.25
+    )

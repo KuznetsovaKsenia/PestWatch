@@ -8,6 +8,10 @@ from .assessment_service import AssessmentService
 from .historical_weather_service import (
     HistoricalWeatherService,
 )
+from .location_service import (
+    LocationNotFoundError,
+    LocationService,
+)
 from .risk_assessment_orchestrator import (
     HistoricalPeriodRequiredError,
     RiskAssessmentOrchestrator,
@@ -22,6 +26,8 @@ __all__ = [
     "AssessmentService",
     "HistoricalPeriodRequiredError",
     "HistoricalWeatherService",
+    "LocationNotFoundError",
+    "LocationService",
     "RiskAssessmentOrchestrator",
     "ThreatService",
     "WeatherService",

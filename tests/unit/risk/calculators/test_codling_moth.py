@@ -131,3 +131,17 @@ def test_codling_moth_contains_explanation(total):
     )[0]
 
     assert factor.explanation
+
+def test_returns_not_matched_when_temperature_season_has_not_started():
+    calculator = CodlingMothRiskCalculator()
+
+    context = RiskContext(
+        degree_days_10c=None,
+        degree_days_season_started=False,
+    )
+
+    factor = calculator.evaluate(context)[0]
+
+    assert factor.state == RiskFactorState.NOT_MATCHED
+    assert factor.actual_value == 0.0
+    assert "не началось" in factor.explanation

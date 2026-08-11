@@ -213,6 +213,7 @@ def test_human_profile_runs_real_tick_calculation(app):
         weather_service = FakeWeatherService(
             weather=create_weather(
                 temperature=12.0,
+                humidity=91.0,
             ),
         )
 
@@ -255,7 +256,7 @@ def test_vegetable_garden_reuses_current_weather_for_two_threats(
     with app.app_context():
         weather_service = FakeWeatherService(
             weather=create_weather(
-                temperature=25.5,
+                temperature=25.0,
                 humidity=65.0,
                 soil_temperature_6cm=16.0,
                 soil_temperature_18cm=10.0,

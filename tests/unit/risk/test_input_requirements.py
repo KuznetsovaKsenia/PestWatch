@@ -14,6 +14,7 @@ from app.risk import (
             "TICK",
             frozenset({
                 RiskInputCapability.CURRENT_WEATHER,
+                RiskInputCapability.SATURATION_DEFICIT,
             }),
         ),
         (

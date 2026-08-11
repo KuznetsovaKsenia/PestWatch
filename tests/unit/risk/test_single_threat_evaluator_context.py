@@ -17,12 +17,14 @@ class FakeContextPreparer:
         *,
         weather=None,
         historical_temperatures=None,
+        degree_days_season_started=None,
     ):
         self.calls.append(
             (
                 threat_code,
                 weather,
                 historical_temperatures,
+                degree_days_season_started,
             )
         )
 

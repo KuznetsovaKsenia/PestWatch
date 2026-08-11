@@ -1,5 +1,9 @@
 from collections.abc import Mapping
 
+from app.integrations.geocoding import (
+    OpenMeteoGeocodingAdapter,
+    OpenMeteoGeocodingClient,
+)
 from app.integrations.weather import (
     HistoricalWeatherAdapter,
     HistoricalWeatherClient,
@@ -8,6 +12,7 @@ from app.integrations.weather import (
 )
 from app.repositories import AssessmentRepository
 from app.risk import (
+    CodlingMothSeasonStartDetector,
     RiskCalculatorRegistry,
     RiskContextPreparer,
     RiskEngine,
@@ -26,12 +31,14 @@ from app.services import (
     AssessmentHistoryService,
     AssessmentService,
     HistoricalWeatherService,
+    LocationService,
     RiskAssessmentOrchestrator,
     ThreatService,
     WeatherService,
 )
 from app.weather import (
     DegreeDaysCalculator,
+    SaturationDeficitCalculator,
     SoilTemperatureEstimator,
 )
 
@@ -41,6 +48,7 @@ def build_assessment_services(
 ) -> tuple[
     AssessmentExecutionService,
     AssessmentHistoryService,
+    LocationService,
 ]:
     repository = AssessmentRepository()
 
@@ -49,6 +57,18 @@ def build_assessment_services(
     )
     history_service = AssessmentHistoryService(
         repository
+    )
+
+    location_service = LocationService(
+        client=OpenMeteoGeocodingClient(
+            base_url=config[
+                "GEOCODING_API_BASE_URL"
+            ],
+            timeout_seconds=config[
+                "GEOCODING_API_TIMEOUT_SECONDS"
+            ],
+        ),
+        adapter=OpenMeteoGeocodingAdapter(),
     )
 
     input_requirements = RiskInputRequirements()
@@ -118,6 +138,9 @@ def build_assessment_services(
         ),
         input_requirements=input_requirements,
         evaluator=evaluator,
+        season_start_detector=(
+            CodlingMothSeasonStartDetector()
+        ),
     )
 
     execution_service = AssessmentExecutionService(
@@ -125,4 +148,8 @@ def build_assessment_services(
         assessment_service=assessment_service,
     )
 
-    return execution_service, history_service
+    return (
+        execution_service,
+        history_service,
+        location_service,
+    )

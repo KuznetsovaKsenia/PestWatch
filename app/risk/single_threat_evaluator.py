@@ -32,12 +32,16 @@ class SingleThreatRiskEvaluator:
         historical_temperatures: (
             tuple[DailyTemperature, ...] | None
         ) = None,
+        degree_days_season_started: bool | None = None,
     ) -> RiskResult:
         result, _ = self.evaluate_with_context(
             threat_code,
             weather=weather,
             historical_temperatures=(
                 historical_temperatures
+            ),
+            degree_days_season_started=(
+                degree_days_season_started
             ),
         )
 
@@ -51,6 +55,7 @@ class SingleThreatRiskEvaluator:
         historical_temperatures: (
             tuple[DailyTemperature, ...] | None
         ) = None,
+        degree_days_season_started: bool | None = None,
     ) -> tuple[
         RiskResult,
         RiskContext,
@@ -60,6 +65,9 @@ class SingleThreatRiskEvaluator:
             weather=weather,
             historical_temperatures=(
                 historical_temperatures
+            ),
+            degree_days_season_started=(
+                degree_days_season_started
             ),
         )
 

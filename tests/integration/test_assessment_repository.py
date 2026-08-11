@@ -87,6 +87,27 @@ def create_observations():
     )
 
 
+def create_degree_days_observations():
+    return (
+        DailyTemperature(
+            date=date(
+                2026,
+                5,
+                10,
+            ),
+            mean_temperature=20.0,
+        ),
+        DailyTemperature(
+            date=date(
+                2026,
+                5,
+                11,
+            ),
+            mean_temperature=21.0,
+        ),
+    )
+
+
 def create_degree_days(
     observations,
 ):
@@ -96,12 +117,12 @@ def create_degree_days(
         period_start=date(
             2026,
             5,
-            1,
+            10,
         ),
         period_end=date(
             2026,
             5,
-            2,
+            11,
         ),
         observations=observations,
         method=(
@@ -143,6 +164,9 @@ def create_factor():
 
 def create_assessment():
     observations = create_observations()
+    degree_days_observations = (
+        create_degree_days_observations()
+    )
 
     return Assessment(
         id=None,
@@ -171,8 +195,9 @@ def create_assessment():
                 create_soil_estimate()
             ),
             degree_days_10c=create_degree_days(
-                observations
+                degree_days_observations
             ),
+            saturation_deficit_mm_hg=1.25,
             historical_observations=observations,
         ),
         risk_results=(
@@ -370,13 +395,13 @@ def test_repository_restores_degree_days_snapshot(
         assert degree_days.period_start == date(
             2026,
             5,
-            1,
+            10,
         )
 
         assert degree_days.period_end == date(
             2026,
             5,
-            2,
+            11,
         )
 
         assert (
@@ -411,7 +436,14 @@ def test_repository_restores_historical_observations(
             restored.input_snapshot
             .degree_days_10c
             .observations
-            == observations
+            == create_degree_days_observations()
+        )
+
+        assert (
+            restored.input_snapshot
+            .degree_days_10c
+            .observations
+            != observations
         )
 
 
@@ -529,3 +561,21 @@ def test_repository_returns_none_for_unknown_id(
         )
 
         assert result is None
+
+def test_repository_restores_saturation_deficit(app):
+    with app.app_context():
+        repository = AssessmentRepository()
+
+        saved = repository.save(
+            create_assessment()
+        )
+
+        restored = repository.get_by_id(
+            saved.id
+        )
+
+        assert (
+            restored.input_snapshot
+            .saturation_deficit_mm_hg
+            == pytest.approx(1.25)
+        )

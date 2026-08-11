@@ -19,6 +19,7 @@ class FakeRiskContextPreparer:
         self.received_threat_code = None
         self.received_weather = None
         self.received_historical_temperatures = None
+        self.received_degree_days_season_started = None
 
     def prepare(
         self,
@@ -26,11 +27,15 @@ class FakeRiskContextPreparer:
         *,
         weather=None,
         historical_temperatures=None,
+        degree_days_season_started=None,
     ):
         self.received_threat_code = threat_code
         self.received_weather = weather
         self.received_historical_temperatures = (
             historical_temperatures
+        )
+        self.received_degree_days_season_started = (
+            degree_days_season_started
         )
 
         return self.context
@@ -185,6 +190,10 @@ def test_evaluator_passes_inputs_to_context_preparer():
     assert (
         preparer.received_historical_temperatures
         is historical_temperatures
+    )
+    assert (
+        preparer.received_degree_days_season_started
+        is None
     )
 
 

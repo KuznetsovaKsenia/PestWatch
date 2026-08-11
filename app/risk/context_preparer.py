@@ -7,6 +7,7 @@ from app.domain import (
 from app.risk.input_requirements import RiskInputRequirements
 from app.weather import (
     DegreeDaysCalculator,
+    SaturationDeficitCalculator,
     SoilTemperatureEstimator,
 )
 
@@ -21,6 +22,9 @@ class RiskContextPreparer:
         requirements: RiskInputRequirements,
         soil_temperature_estimator: SoilTemperatureEstimator,
         degree_days_calculator: DegreeDaysCalculator,
+        saturation_deficit_calculator: (
+            SaturationDeficitCalculator | None
+        ) = None,
     ):
         self._requirements = requirements
         self._soil_temperature_estimator = (
@@ -28,6 +32,10 @@ class RiskContextPreparer:
         )
         self._degree_days_calculator = (
             degree_days_calculator
+        )
+        self._saturation_deficit_calculator = (
+            saturation_deficit_calculator
+            or SaturationDeficitCalculator()
         )
 
     def prepare(
@@ -38,6 +46,7 @@ class RiskContextPreparer:
         historical_temperatures: (
             tuple[DailyTemperature, ...] | None
         ) = None,
+        degree_days_season_started: bool | None = None,
     ) -> RiskContext:
         capabilities = self._requirements.get(
             threat_code
@@ -81,12 +90,32 @@ class RiskContextPreparer:
                 )
             )
 
+        saturation_deficit = None
+
+        if (
+            RiskInputCapability.SATURATION_DEFICIT
+            in capabilities
+        ):
+            saturation_deficit = (
+                self._saturation_deficit_calculator
+                .calculate(
+                    temperature=weather.temperature,
+                    humidity=weather.humidity,
+                )
+            )
+
         return RiskContext(
             weather=weather,
             soil_temperature_10cm_estimate=(
                 soil_temperature_estimate
             ),
             degree_days_10c=degree_days,
+            degree_days_season_started=(
+                degree_days_season_started
+            ),
+            saturation_deficit_mm_hg=(
+                saturation_deficit
+            ),
         )
 
     @staticmethod
@@ -115,6 +144,16 @@ class RiskContextPreparer:
             raise RiskInputUnavailableError(
                 "Current weather input is required "
                 "for soil temperature estimation."
+            )
+
+        if (
+            RiskInputCapability.SATURATION_DEFICIT
+            in capabilities
+            and weather is None
+        ):
+            raise RiskInputUnavailableError(
+                "Current weather input is required "
+                "for saturation deficit calculation."
             )
 
         if (

@@ -12,10 +12,12 @@ from app.domain import (
     UserProfile,
 )
 from app.domain.assessment_summary import AssessmentSummary
+from app.integrations.geocoding import GeocodingIntegrationError
 from app.services import (
     AssessmentExecutionService,
     AssessmentHistoryService,
-    HistoricalPeriodRequiredError,
+    LocationNotFoundError,
+    LocationService,
 )
 
 
@@ -155,6 +157,9 @@ def _serialize_snapshot(
             if degree_days is not None
             else None
         ),
+        "saturation_deficit_mm_hg": (
+            snapshot.saturation_deficit_mm_hg
+        ),
         "historical_observations": (
             [
                 _serialize_observation(observation)
@@ -231,7 +236,9 @@ def _error_response(
     )
 
 
-def _parse_location(payload: dict) -> Location:
+def _parse_location_input(
+    payload: dict,
+) -> tuple[str, str, str]:
     location_payload = payload["location"]
 
     if not isinstance(location_payload, dict):
@@ -239,37 +246,30 @@ def _parse_location(payload: dict) -> Location:
             "Location must be an object."
         )
 
-    return Location(
-        name=location_payload["name"],
-        region=location_payload["region"],
-        country=location_payload["country"],
-        latitude=location_payload["latitude"],
-        longitude=location_payload["longitude"],
-    )
+    name = location_payload["name"]
+    region = location_payload["region"]
+    country = location_payload["country"]
 
-
-def _parse_historical_start_date(
-    payload: dict,
-) -> date | None:
-    raw_value = payload.get(
-        "historical_start_date"
-    )
-
-    if raw_value is None:
-        return None
-
-    if not isinstance(raw_value, str):
+    if not all(
+        isinstance(value, str) and value.strip()
+        for value in (name, region, country)
+    ):
         raise ValueError(
-            "Historical start date must use ISO format."
+            "Location fields must be non-empty strings."
         )
 
-    return date.fromisoformat(raw_value)
+    return (
+        name.strip(),
+        region.strip(),
+        country.strip(),
+    )
 
 
 def create_assessment_api(
     *,
     execution_service: AssessmentExecutionService,
     history_service: AssessmentHistoryService,
+    location_service: LocationService,
     assessment_date_provider: Callable[[], date] = date.today,
 ) -> Blueprint:
     assessment_api = Blueprint(
@@ -294,15 +294,16 @@ def create_assessment_api(
             )
 
         try:
-            location = _parse_location(payload)
+            (
+                location_name,
+                location_region,
+                location_country,
+            ) = _parse_location_input(payload)
+
             profile = UserProfile(
                 payload["profile"]
             )
-            historical_start_date = (
-                _parse_historical_start_date(
-                    payload
-                )
-            )
+
         except (KeyError, TypeError, ValueError):
             return _error_response(
                 code="INVALID_REQUEST",
@@ -313,26 +314,36 @@ def create_assessment_api(
             )
 
         try:
-            assessment = execution_service.execute(
-                location=location,
-                profile=profile,
-                assessment_date=(
-                    assessment_date_provider()
-                ),
-                historical_start_date=(
-                    historical_start_date
-                ),
+            location = location_service.resolve(
+                name=location_name,
+                region=location_region,
+                country=location_country,
             )
-        except HistoricalPeriodRequiredError:
+        except LocationNotFoundError:
             return _error_response(
-                code="HISTORICAL_PERIOD_REQUIRED",
+                code="LOCATION_NOT_FOUND",
                 message=(
-                    "Historical start date is required "
-                    "for the selected profile and must not "
-                    "be after the assessment date."
+                    "Не удалось найти указанное местоположение."
                 ),
                 status_code=400,
             )
+        except GeocodingIntegrationError:
+            return _error_response(
+                code="LOCATION_SERVICE_UNAVAILABLE",
+                message=(
+                    "Не удалось определить местоположение. "
+                    "Попробуйте позже."
+                ),
+                status_code=503,
+            )
+
+        assessment = execution_service.execute(
+            location=location,
+            profile=profile,
+            assessment_date=(
+                assessment_date_provider()
+            ),
+        )
 
         return (
             jsonify(

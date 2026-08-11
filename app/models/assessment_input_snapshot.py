@@ -109,6 +109,16 @@ class AssessmentInputSnapshotModel(db.Model):
         nullable=True,
     )
 
+    degree_days_observations = db.Column(
+        db.JSON,
+        nullable=True,
+    )
+
+    saturation_deficit_mm_hg = db.Column(
+        db.Float,
+        nullable=True,
+    )
+
     historical_observations = db.Column(
         db.JSON,
         nullable=True,

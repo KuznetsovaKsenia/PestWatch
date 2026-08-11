@@ -47,6 +47,21 @@ class AssessmentExecutionService:
             )
         )
 
+        resolved_historical_start_date = (
+            historical_start_date
+        )
+
+        if (
+            resolved_historical_start_date is None
+            and input_snapshot.degree_days_10c
+            is not None
+        ):
+            resolved_historical_start_date = (
+                input_snapshot
+                .degree_days_10c
+                .period_start
+            )
+
         return (
             self._assessment_service
             .save_assessment(
@@ -54,7 +69,7 @@ class AssessmentExecutionService:
                 profile=profile,
                 assessment_date=assessment_date,
                 historical_start_date=(
-                    historical_start_date
+                    resolved_historical_start_date
                 ),
                 input_snapshot=input_snapshot,
                 risk_results=risk_results,

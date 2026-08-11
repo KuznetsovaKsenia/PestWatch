@@ -10,6 +10,7 @@ from app.domain import (
 )
 from app.integrations.weather import WeatherIntegrationError
 from app.risk import (
+    CodlingMothSeasonStartDetector,
     RiskInputRequirements,
     RiskInputUnavailableError,
     SingleThreatRiskEvaluator,
@@ -33,6 +34,9 @@ class RiskAssessmentOrchestrator:
         historical_weather_service: HistoricalWeatherService,
         input_requirements: RiskInputRequirements,
         evaluator: SingleThreatRiskEvaluator,
+        season_start_detector: (
+            CodlingMothSeasonStartDetector | None
+        ) = None,
     ):
         self._threat_service = threat_service
         self._weather_service = weather_service
@@ -41,6 +45,10 @@ class RiskAssessmentOrchestrator:
         )
         self._input_requirements = input_requirements
         self._evaluator = evaluator
+        self._season_start_detector = (
+            season_start_detector
+            or CodlingMothSeasonStartDetector()
+        )
 
     def evaluate(
         self,
@@ -120,10 +128,13 @@ class RiskAssessmentOrchestrator:
         )
 
         weather = None
-        historical_temperatures = None
+        historical_observations = None
+        degree_days_temperatures = None
+        degree_days_season_started = None
 
         soil_temperature_estimate = None
         degree_days = None
+        saturation_deficit = None
 
         failed_capabilities: dict[
             RiskInputCapability,
@@ -151,32 +162,52 @@ class RiskAssessmentOrchestrator:
             RiskInputCapability.DEGREE_DAYS_10C
             in required_capabilities
         ):
-            if historical_start_date is None:
-                raise HistoricalPeriodRequiredError(
-                    "Historical start date is required "
-                    "for selected threats."
-                )
-
-            if (
-                historical_start_date
-                > assessment_date
-            ):
-                raise HistoricalPeriodRequiredError(
-                    "Historical start date cannot be "
-                    "after assessment date."
-                )
+            (
+                acquisition_start_date,
+                automatic_period,
+            ) = self._historical_acquisition_start(
+                assessment_date=assessment_date,
+                historical_start_date=(
+                    historical_start_date
+                ),
+            )
 
             try:
-                historical_temperatures = (
+                historical_observations = (
                     self._historical_weather_service
                     .get_daily_temperatures(
                         location=location,
-                        start_date=(
-                            historical_start_date
-                        ),
+                        start_date=acquisition_start_date,
                         end_date=assessment_date,
                     )
                 )
+
+                if automatic_period:
+                    season_start = (
+                        self._season_start_detector
+                        .find_start(
+                            historical_observations
+                        )
+                    )
+
+                    degree_days_season_started = (
+                        season_start is not None
+                    )
+
+                    degree_days_temperatures = (
+                        self._slice_from_date(
+                            historical_observations,
+                            season_start,
+                        )
+                        if season_start is not None
+                        else ()
+                    )
+                else:
+                    degree_days_season_started = True
+                    degree_days_temperatures = (
+                        historical_observations
+                    )
+
             except WeatherIntegrationError as exc:
                 failed_capabilities[
                     RiskInputCapability
@@ -223,7 +254,17 @@ class RiskAssessmentOrchestrator:
             )
 
             threat_historical_temperatures = (
-                historical_temperatures
+                degree_days_temperatures
+                if (
+                    RiskInputCapability
+                    .DEGREE_DAYS_10C
+                    in capabilities
+                )
+                else None
+            )
+
+            threat_season_started = (
+                degree_days_season_started
                 if (
                     RiskInputCapability
                     .DEGREE_DAYS_10C
@@ -244,6 +285,9 @@ class RiskAssessmentOrchestrator:
                             weather=threat_weather,
                             historical_temperatures=(
                                 threat_historical_temperatures
+                            ),
+                            degree_days_season_started=(
+                                threat_season_started
                             ),
                         )
                     )
@@ -266,6 +310,14 @@ class RiskAssessmentOrchestrator:
                             context.degree_days_10c
                         )
 
+                    if (
+                        context.saturation_deficit_mm_hg
+                        is not None
+                    ):
+                        saturation_deficit = (
+                            context.saturation_deficit_mm_hg
+                        )
+
                 else:
                     result = (
                         self._evaluator.evaluate(
@@ -273,6 +325,9 @@ class RiskAssessmentOrchestrator:
                             weather=threat_weather,
                             historical_temperatures=(
                                 threat_historical_temperatures
+                            ),
+                            degree_days_season_started=(
+                                threat_season_started
                             ),
                         )
                     )
@@ -294,12 +349,47 @@ class RiskAssessmentOrchestrator:
                     soil_temperature_estimate
                 ),
                 degree_days_10c=degree_days,
+                saturation_deficit_mm_hg=(
+                    saturation_deficit
+                ),
                 historical_observations=(
-                    historical_temperatures
+                    historical_observations
                 ),
             )
 
         return tuple(results), snapshot
+
+    @staticmethod
+    def _historical_acquisition_start(
+        *,
+        assessment_date: date,
+        historical_start_date: date | None,
+    ) -> tuple[date, bool]:
+        if historical_start_date is not None:
+            if historical_start_date > assessment_date:
+                raise HistoricalPeriodRequiredError(
+                    "Historical start date cannot be "
+                    "after assessment date."
+                )
+
+            return historical_start_date, False
+
+        return date(
+            assessment_date.year,
+            1,
+            1,
+        ), True
+
+    @staticmethod
+    def _slice_from_date(
+        observations,
+        start_date: date,
+    ):
+        return tuple(
+            observation
+            for observation in observations
+            if observation.date >= start_date
+        )
 
     @staticmethod
     def _find_capability_error(

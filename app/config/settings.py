@@ -13,6 +13,18 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    GEOCODING_API_BASE_URL = os.getenv(
+        "GEOCODING_API_BASE_URL",
+        "https://geocoding-api.open-meteo.com/v1/search",
+    )
+
+    GEOCODING_API_TIMEOUT_SECONDS = float(
+        os.getenv(
+            "GEOCODING_API_TIMEOUT_SECONDS",
+            "5",
+        )
+    )
+
     WEATHER_API_BASE_URL = os.getenv(
         "WEATHER_API_BASE_URL",
         "https://api.open-meteo.com/v1/forecast",

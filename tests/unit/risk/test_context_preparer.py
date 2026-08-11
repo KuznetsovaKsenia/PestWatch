@@ -51,6 +51,23 @@ class FakeDegreeDaysCalculator:
         return self.result
 
 
+class FakeSaturationDeficitCalculator:
+    def __init__(self, result=None):
+        self.result = result
+        self.received_temperature = None
+        self.received_humidity = None
+
+    def calculate(
+        self,
+        *,
+        temperature,
+        humidity,
+    ):
+        self.received_temperature = temperature
+        self.received_humidity = humidity
+        return self.result
+
+
 def create_weather():
     return WeatherData(
         observed_at=datetime(2026, 8, 11, 12, 0),
@@ -69,6 +86,7 @@ def create_preparer(
     *,
     estimate=None,
     degree_days=None,
+    saturation_deficit=None,
 ):
     return RiskContextPreparer(
         requirements=FakeRiskInputRequirements(
@@ -229,3 +247,37 @@ def test_empty_historical_observations_are_valid_input():
 
     assert calculator.received_observations == ()
     assert context.degree_days_10c is None
+
+def test_preparer_builds_saturation_deficit():
+    weather = create_weather()
+    calculator = FakeSaturationDeficitCalculator(
+        result=1.25,
+    )
+
+    preparer = RiskContextPreparer(
+        requirements=FakeRiskInputRequirements(
+            frozenset({
+                RiskInputCapability.CURRENT_WEATHER,
+                RiskInputCapability.SATURATION_DEFICIT,
+            }),
+        ),
+        soil_temperature_estimator=(
+            FakeSoilTemperatureEstimator()
+        ),
+        degree_days_calculator=(
+            FakeDegreeDaysCalculator()
+        ),
+        saturation_deficit_calculator=calculator,
+    )
+
+    context = preparer.prepare(
+        "TICK",
+        weather=weather,
+    )
+
+    assert (
+        context.saturation_deficit_mm_hg
+        == 1.25
+    )
+    assert calculator.received_temperature == 20.0
+    assert calculator.received_humidity == 60.0

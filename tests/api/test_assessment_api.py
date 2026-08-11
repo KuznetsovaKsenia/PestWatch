@@ -24,7 +24,8 @@ from app.domain import (
     WeatherData,
 )
 from app.domain.assessment_summary import AssessmentSummary
-from app.services import HistoricalPeriodRequiredError
+from app.integrations.geocoding import GeocodingTimeoutError
+from app.services import LocationNotFoundError
 
 
 class FakeExecutionService:
@@ -44,6 +45,25 @@ class FakeExecutionService:
             raise self.error
 
         return self.assessment
+
+
+class FakeLocationService:
+    def __init__(
+        self,
+        location=None,
+        error=None,
+    ):
+        self.location = location or create_location()
+        self.error = error
+        self.calls = []
+
+    def resolve(self, **kwargs):
+        self.calls.append(kwargs)
+
+        if self.error is not None:
+            raise self.error
+
+        return self.location
 
 
 class FakeHistoryService:
@@ -170,6 +190,7 @@ def create_assessment():
                     soil_estimate
                 ),
                 degree_days_10c=degree_days,
+                saturation_deficit_mm_hg=1.25,
                 historical_observations=(
                     observations
                 ),
@@ -199,6 +220,7 @@ def api_client():
         *,
         execution_service=None,
         history_service=None,
+        location_service=None,
     ):
         app = Flask(__name__)
         app.config["TESTING"] = True
@@ -212,6 +234,10 @@ def api_client():
                 history_service=(
                     history_service
                     or FakeHistoryService()
+                ),
+                location_service=(
+                    location_service
+                    or FakeLocationService()
                 ),
                 assessment_date_provider=(
                     lambda: date(2026, 8, 11)
@@ -231,8 +257,10 @@ def test_post_assessment_executes_and_returns_persisted_assessment(
     execution_service = FakeExecutionService(
         assessment=assessment
     )
+    location_service = FakeLocationService()
     client = api_client(
-        execution_service=execution_service
+        execution_service=execution_service,
+        location_service=location_service,
     )
 
     response = client.post(
@@ -242,13 +270,8 @@ def test_post_assessment_executes_and_returns_persisted_assessment(
                 "name": "Москва",
                 "region": "Москва",
                 "country": "Россия",
-                "latitude": 55.7558,
-                "longitude": 37.6173,
             },
             "profile": "HUMAN",
-            "historical_start_date": (
-                "2026-05-01"
-            ),
         },
     )
     body = response.get_json()
@@ -272,10 +295,24 @@ def test_post_assessment_executes_and_returns_persisted_assessment(
     )
 
     assert (
+        body["data"]["input_snapshot"]
+        ["saturation_deficit_mm_hg"]
+        == pytest.approx(1.25)
+    )
+
+    assert (
         body["data"]["risk_results"][0]
         ["status"]
         == "CALCULATED"
     )
+
+    assert location_service.calls == [
+        {
+            "name": "Москва",
+            "region": "Москва",
+            "country": "Россия",
+        }
+    ]
 
     call = execution_service.calls[0]
 
@@ -288,11 +325,7 @@ def test_post_assessment_executes_and_returns_persisted_assessment(
         11,
     )
 
-    assert call["historical_start_date"] == date(
-        2026,
-        5,
-        1,
-    )
+    assert "historical_start_date" not in call
 
 
 def test_post_assessment_rejects_invalid_request(
@@ -334,8 +367,6 @@ def test_post_assessment_rejects_missing_location_region_before_execution(
             "location": {
                 "name": "Москва",
                 "country": "Россия",
-                "latitude": 55.7558,
-                "longitude": 37.6173,
             },
             "profile": "HUMAN",
         },
@@ -353,40 +384,6 @@ def test_post_assessment_rejects_missing_location_region_before_execution(
         },
     }
     assert execution_service.calls == []
-
-
-def test_post_assessment_maps_required_historical_period_to_400(
-    api_client,
-):
-    execution_service = FakeExecutionService(
-        error=HistoricalPeriodRequiredError(
-            "Historical period required."
-        )
-    )
-
-    client = api_client(
-        execution_service=execution_service
-    )
-
-    response = client.post(
-        "/api/assessments",
-        json={
-            "location": {
-                "name": "Москва",
-                "region": "Москва",
-                "country": "Россия",
-                "latitude": 55.7558,
-                "longitude": 37.6173,
-            },
-            "profile": "GARDEN",
-        },
-    )
-
-    assert response.status_code == 400
-
-    assert response.get_json()["error"]["code"] == (
-        "HISTORICAL_PERIOD_REQUIRED"
-    )
 
 
 def test_get_assessments_returns_history_summaries(
@@ -491,3 +488,68 @@ def test_get_unknown_assessment_returns_404(
             "message": "Assessment not found.",
         },
     }
+
+def test_post_assessment_returns_400_when_location_not_found(
+    api_client,
+):
+    execution_service = FakeExecutionService()
+    location_service = FakeLocationService(
+        error=LocationNotFoundError(
+            "Location not found."
+        )
+    )
+    client = api_client(
+        execution_service=execution_service,
+        location_service=location_service,
+    )
+
+    response = client.post(
+        "/api/assessments",
+        json={
+            "location": {
+                "name": "Несуществующий город",
+                "region": "Москва",
+                "country": "Россия",
+            },
+            "profile": "HUMAN",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == (
+        "LOCATION_NOT_FOUND"
+    )
+    assert execution_service.calls == []
+
+
+def test_post_assessment_returns_503_when_geocoding_is_unavailable(
+    api_client,
+):
+    execution_service = FakeExecutionService()
+    location_service = FakeLocationService(
+        error=GeocodingTimeoutError(
+            "Provider timeout."
+        )
+    )
+    client = api_client(
+        execution_service=execution_service,
+        location_service=location_service,
+    )
+
+    response = client.post(
+        "/api/assessments",
+        json={
+            "location": {
+                "name": "Москва",
+                "region": "Москва",
+                "country": "Россия",
+            },
+            "profile": "HUMAN",
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.get_json()["error"]["code"] == (
+        "LOCATION_SERVICE_UNAVAILABLE"
+    )
+    assert execution_service.calls == []

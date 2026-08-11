@@ -143,3 +143,10 @@ def test_snapshot_preserves_degree_days_and_observations():
         snapshot.historical_observations
         is observations
     )
+
+def test_snapshot_preserves_saturation_deficit():
+    snapshot = AssessmentInputSnapshot(
+        saturation_deficit_mm_hg=1.25,
+    )
+
+    assert snapshot.saturation_deficit_mm_hg == 1.25

@@ -15,7 +15,16 @@ class CodlingMothRiskCalculator(RiskCalculator):
     ) -> tuple[RiskFactorResult, ...]:
         degree_days = context.degree_days_10c
 
-        if degree_days is None:
+        if context.degree_days_season_started is False:
+            state = RiskFactorState.NOT_MATCHED
+            actual_value = 0.0
+            explanation = (
+                "Устойчивый переход среднесуточной "
+                "температуры выше 10 °C ещё не "
+                "зафиксирован; сезонное накопление "
+                "эффективных температур не началось."
+            )
+        elif degree_days is None:
             state = RiskFactorState.MISSING
             actual_value = None
             explanation = (
