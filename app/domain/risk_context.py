@@ -7,7 +7,7 @@ from .weather_data import WeatherData
 
 @dataclass(frozen=True)
 class RiskContext:
-    weather: WeatherData
+    weather: WeatherData | None = None
     soil_temperature_10cm_estimate: (
         SoilTemperatureEstimate | None
     ) = None

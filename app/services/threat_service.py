@@ -1,4 +1,8 @@
-from app.domain import Threat, ThreatDetails
+from app.domain import (
+    Threat,
+    ThreatDetails,
+    UserProfile,
+)
 from app.repositories import ThreatRepository
 
 
@@ -17,3 +21,11 @@ class ThreatService:
         code: str,
     ) -> ThreatDetails | None:
         return self._repository.get_details_by_code(code)
+
+    def get_threats_for_profile(
+    self,
+    profile: UserProfile,
+    ) -> list[Threat]:
+        return self._repository.get_by_category(
+           profile.value,
+    )

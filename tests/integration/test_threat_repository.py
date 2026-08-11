@@ -108,3 +108,49 @@ def test_repository_returns_no_details_for_unknown_code(app):
         details = repository.get_details_by_code("UNKNOWN")
 
         assert details is None
+
+def test_repository_returns_threats_by_category(app):
+    with app.app_context():
+        repository = ThreatRepository()
+
+        threats = repository.get_by_category(
+            "VEGETABLE_GARDEN",
+        )
+
+        assert {
+            threat.code
+            for threat in threats
+        } == {
+            "COLORADO_BEETLE",
+            "CABBAGE_APHID",
+        }
+
+        assert all(
+            threat.category == "VEGETABLE_GARDEN"
+            for threat in threats
+        )
+
+def test_repository_returns_category_threats_ordered_by_name(app):
+    with app.app_context():
+        repository = ThreatRepository()
+
+        threats = repository.get_by_category(
+            "VEGETABLE_GARDEN",
+        )
+
+        names = [
+            threat.name
+            for threat in threats
+        ]
+
+        assert names == sorted(names)
+
+def test_repository_returns_empty_list_for_unknown_category(app):
+    with app.app_context():
+        repository = ThreatRepository()
+
+        threats = repository.get_by_category(
+            "UNKNOWN",
+        )
+
+        assert threats == []

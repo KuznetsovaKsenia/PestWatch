@@ -80,3 +80,21 @@ class ThreatRepository:
             description=model.description,
             active=model.active,
         )
+
+    def get_by_category(
+    self,
+    category: str,
+    ) -> list[Threat]:
+        models = db.session.execute(
+            db.select(ThreatModel)
+            .where(
+                ThreatModel.category == category,
+                ThreatModel.active.is_(True),
+            )
+            .order_by(ThreatModel.name)
+        ).scalars().all()
+
+        return [
+            self._to_domain(model)
+            for model in models
+        ]
