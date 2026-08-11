@@ -241,7 +241,7 @@ def _parse_location(payload: dict) -> Location:
 
     return Location(
         name=location_payload["name"],
-        region=location_payload.get("region"),
+        region=location_payload["region"],
         country=location_payload["country"],
         latitude=location_payload["latitude"],
         longitude=location_payload["longitude"],

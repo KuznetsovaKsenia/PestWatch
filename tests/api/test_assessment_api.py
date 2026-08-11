@@ -320,6 +320,41 @@ def test_post_assessment_rejects_invalid_request(
     }
 
 
+def test_post_assessment_rejects_missing_location_region_before_execution(
+    api_client,
+):
+    execution_service = FakeExecutionService()
+    client = api_client(
+        execution_service=execution_service
+    )
+
+    response = client.post(
+        "/api/assessments",
+        json={
+            "location": {
+                "name": "Москва",
+                "country": "Россия",
+                "latitude": 55.7558,
+                "longitude": 37.6173,
+            },
+            "profile": "HUMAN",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "success": False,
+        "error": {
+            "code": "INVALID_REQUEST",
+            "message": (
+                "Request contains invalid "
+                "assessment input."
+            ),
+        },
+    }
+    assert execution_service.calls == []
+
+
 def test_post_assessment_maps_required_historical_period_to_400(
     api_client,
 ):
