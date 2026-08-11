@@ -7,6 +7,10 @@ from .input_requirements import (
     RiskInputRequirements,
     RiskInputRequirementsNotFoundError,
 )
+from .context_preparer import (
+    RiskContextPreparer,
+    RiskInputUnavailableError,
+)
 from .evaluation import RiskEvaluation
 from .policy import RiskPolicy
 from .engine import RiskEngine
@@ -20,4 +24,6 @@ __all__ = [
     "RiskEngine",
     "RiskInputRequirements",
     "RiskInputRequirementsNotFoundError",
+    "RiskContextPreparer",
+    "RiskInputUnavailableError",
 ]

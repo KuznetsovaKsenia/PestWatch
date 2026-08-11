@@ -59,7 +59,7 @@ def create_degree_days_result():
     )
 
 
-def test_context_requires_and_preserves_weather():
+def test_context_preserves_weather():
     weather = create_weather()
 
     context = RiskContext(
@@ -67,6 +67,21 @@ def test_context_requires_and_preserves_weather():
     )
 
     assert context.weather is weather
+
+def test_context_allows_missing_weather():
+    context = RiskContext()
+
+    assert context.weather is None
+
+def test_context_can_store_degree_days_without_weather():
+    degree_days = create_degree_days_result()
+
+    context = RiskContext(
+        degree_days_10c=degree_days,
+    )
+
+    assert context.weather is None
+    assert context.degree_days_10c is degree_days
 
 
 def test_context_defaults_derived_inputs_to_none():
