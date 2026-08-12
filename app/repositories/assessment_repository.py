@@ -126,15 +126,13 @@ class AssessmentRepository:
 
         degree_days = snapshot.degree_days_10c
 
+        saturation_deficit = (
+            snapshot.saturation_deficit_mm_hg
+        )
+
         observations = (
             snapshot.historical_observations
         )
-
-        if (
-            observations is None
-            and degree_days is not None
-        ):
-            observations = degree_days.observations
 
         return AssessmentInputSnapshotModel(
             weather_observed_at=(
@@ -230,6 +228,23 @@ class AssessmentRepository:
                 degree_days.method.value
                 if degree_days is not None
                 else None
+            ),
+            degree_days_observations=(
+                [
+                    {
+                        "date": observation.date.isoformat(),
+                        "mean_temperature": (
+                            observation.mean_temperature
+                        ),
+                    }
+                    for observation
+                    in degree_days.observations
+                ]
+                if degree_days is not None
+                else None
+            ),
+            saturation_deficit_mm_hg=(
+                saturation_deficit
             ),
             historical_observations=(
                 [
@@ -349,6 +364,25 @@ class AssessmentRepository:
                 in model.historical_observations
             )
 
+        degree_days_observations = None
+
+        if (
+            model.degree_days_observations
+            is not None
+        ):
+            degree_days_observations = tuple(
+                DailyTemperature(
+                    date=date.fromisoformat(
+                        item["date"]
+                    ),
+                    mean_temperature=(
+                        item["mean_temperature"]
+                    ),
+                )
+                for item
+                in model.degree_days_observations
+            )
+
         weather = None
 
         if model.weather_observed_at is not None:
@@ -407,7 +441,10 @@ class AssessmentRepository:
                 period_end=(
                     model.degree_days_period_end
                 ),
-                observations=observations or (),
+                observations=(
+                    degree_days_observations
+                    or ()
+                ),
                 method=DegreeDaysCalculationMethod(
                     model.degree_days_method
                 ),
@@ -419,6 +456,9 @@ class AssessmentRepository:
                 soil_estimate
             ),
             degree_days_10c=degree_days,
+            saturation_deficit_mm_hg=(
+                model.saturation_deficit_mm_hg
+            ),
             historical_observations=observations,
         )
 

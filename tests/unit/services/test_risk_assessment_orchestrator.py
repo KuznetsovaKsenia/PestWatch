@@ -111,6 +111,7 @@ class FakeSingleThreatRiskEvaluator:
         *,
         weather=None,
         historical_temperatures=None,
+        degree_days_season_started=None,
     ):
         self.calls.append(
             (
@@ -557,12 +558,12 @@ def test_results_preserve_threat_order():
     )
 
 
-def test_historical_period_is_required_when_needed():
+def test_historical_period_is_determined_automatically_when_not_provided():
     (
         orchestrator,
         _,
         _,
-        _,
+        historical_weather_service,
         _,
     ) = create_orchestrator(
         threats=[
@@ -578,21 +579,24 @@ def test_historical_period_is_required_when_needed():
         },
     )
 
-    with pytest.raises(
-        HistoricalPeriodRequiredError,
-        match=(
-            "Historical start date is required"
+    orchestrator.evaluate(
+        location=create_location(),
+        profile=UserProfile.GARDEN,
+        assessment_date=date(
+            2026,
+            8,
+            11,
         ),
-    ):
-        orchestrator.evaluate(
-            location=create_location(),
-            profile=UserProfile.GARDEN,
-            assessment_date=date(
-                2026,
-                8,
-                11,
-            ),
-        )
+    )
+
+    assert (
+        historical_weather_service.received_start_date
+        == date(2026, 1, 1)
+    )
+    assert (
+        historical_weather_service.received_end_date
+        == date(2026, 8, 11)
+    )
 
 
 def test_historical_start_date_cannot_be_after_assessment_date():

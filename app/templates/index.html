@@ -1,10 +1,419 @@
 {% extends "base.html" %}
 
-{% block title %}PestWatch{% endblock %}
+{% block title %}Оценка риска — PestWatch{% endblock %}
 
 {% block content %}
-<section>
-    <h2>Оценка сезонного риска клещей и вредителей растений</h2>
-    <p>Проект находится на этапе технической инициализации.</p>
+
+<div
+    id="demo-mode-banner"
+    class="demo-mode-banner"
+    hidden
+>
+    <span>Демонстрационный режим</span>
+
+    <a
+        id="demo-mode-exit"
+        class="demo-mode-banner__exit"
+        href="/"
+    >
+        Выйти
+    </a>
+</div>
+
+<section class="hero">
+    <div class="hero__content">
+        <p class="eyebrow">
+            Сезонная оценка риска
+        </p>
+
+        <h1>
+            Проверьте актуальные риски
+            клещей и вредителей растений
+        </h1>
+
+        <p class="hero__description">
+            Укажите местоположение и выберите профиль.
+            PestWatch определит релевантные угрозы
+            и выполнит оценку риска.
+        </p>
+    </div>
 </section>
+
+<section class="assessment-layout">
+    <article class="card assessment-card">
+        <div class="card__header">
+            <h2>Новая оценка</h2>
+
+            <p>
+                Заполните данные для запуска расчёта.
+            </p>
+        </div>
+
+        <form
+            id="assessment-form"
+            class="assessment-form"
+        >
+            <fieldset class="form-section">
+                <legend>Местоположение</legend>
+
+                <div class="form-grid">
+
+                    <!-- =================================================
+                         REAL MODE LOCATION
+                         ================================================= -->
+
+                    <div
+                        id="real-location-field"
+                        class="form-field form-field--wide"
+                    >
+                        <label for="location-name">
+                            Населённый пункт
+                        </label>
+
+                        <input
+                            id="location-name"
+                            name="location_name"
+                            type="text"
+                            required
+                            autocomplete="address-level2"
+                            placeholder="Например, Москва"
+                        >
+                    </div>
+
+                    <!-- =================================================
+                         DEMO MODE LOCATION
+                         Используется вместо обычного поля города.
+                         Технические DEMO_A ... DEMO_G пользователю
+                         не показываются.
+                         ================================================= -->
+
+                    <div
+                        id="demo-location-field"
+                        class="form-field form-field--wide"
+                        hidden
+                    >
+                        <label for="demo-location-select">
+                            Населённый пункт
+                        </label>
+
+                        <select
+                            id="demo-location-select"
+                            name="demo_location"
+                        >
+                            <option value="">
+                                Выберите населённый пункт
+                            </option>
+
+                            <option value="DEMO_A">
+                                Архангельск
+                            </option>
+
+                            <option value="DEMO_B">
+                                Казань
+                            </option>
+
+                            <option value="DEMO_C">
+                                Омск
+                            </option>
+
+                            <option value="DEMO_D">
+                                Пермь
+                            </option>
+
+                            <option value="DEMO_E">
+                                Тула
+                            </option>
+
+                            <option value="DEMO_F">
+                                Курск
+                            </option>
+
+                            <option value="DEMO_G">
+                                Томск
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="location-region">
+                            Регион
+                        </label>
+
+                        <input
+                            id="location-region"
+                            name="location_region"
+                            type="text"
+                            required
+                            autocomplete="address-level1"
+                            placeholder="Например, Москва"
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="location-country">
+                            Страна
+                        </label>
+
+                        <input
+                            id="location-country"
+                            name="location_country"
+                            type="text"
+                            required
+                            autocomplete="country-name"
+                            value="Россия"
+                        >
+                    </div>
+                </div>
+
+                <p
+                    id="location-field-hint"
+                    class="field-hint"
+                >
+                    Координаты будут определены автоматически.
+                </p>
+            </fieldset>
+
+            <fieldset class="form-section">
+                <legend>Профиль оценки</legend>
+
+                <div class="profile-options">
+                    <label class="profile-option">
+                        <input
+                            type="radio"
+                            name="profile"
+                            value="HUMAN"
+                            required
+                        >
+
+                        <span class="profile-option__content">
+                            <strong>Человек</strong>
+
+                            <span>
+                                Оценка риска сезонной активности клещей.
+                            </span>
+                        </span>
+                    </label>
+
+                    <label class="profile-option">
+                        <input
+                            type="radio"
+                            name="profile"
+                            value="VEGETABLE_GARDEN"
+                        >
+
+                        <span class="profile-option__content">
+                            <strong>Огород</strong>
+
+                            <span>
+                                Оценка риска вредителей овощных культур.
+                            </span>
+                        </span>
+                    </label>
+
+                    <label class="profile-option">
+                        <input
+                            type="radio"
+                            name="profile"
+                            value="GARDEN"
+                        >
+
+                        <span class="profile-option__content">
+                            <strong>Сад</strong>
+
+                            <span>
+                                Оценка риска вредителей плодовых культур.
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <p class="field-hint">
+                Для профиля «Сад» PestWatch автоматически
+                определит расчётный период по температурным
+                наблюдениям текущего года.
+            </p>
+
+            <div
+                id="assessment-error"
+                class="form-message form-message--error"
+                role="alert"
+                hidden
+            ></div>
+
+            <div class="form-actions">
+                <button
+                    id="assessment-submit"
+                    class="button button--primary"
+                    type="submit"
+                >
+                    Выполнить оценку
+                </button>
+            </div>
+        </form>
+    </article>
+
+    <aside class="card info-card">
+        <h2>Как работает PestWatch</h2>
+
+        <ol class="flow-list">
+            <li>
+                Определяет координаты указанного места.
+            </li>
+
+            <li>
+                Определяет угрозы,
+                относящиеся к выбранному профилю.
+            </li>
+
+            <li>
+                Получает необходимые погодные наблюдения.
+            </li>
+
+            <li>
+                Рассчитывает факторы риска
+                и сохраняет результат.
+            </li>
+        </ol>
+
+        <p class="info-card__note">
+            После расчёта результат автоматически
+            сохраняется в истории PestWatch.
+        </p>
+    </aside>
+</section>
+
+<section
+    id="assessment-result"
+    class="assessment-result"
+    aria-live="polite"
+    hidden
+>
+    <div class="section-heading">
+        <p class="eyebrow">
+            Результат оценки
+        </p>
+
+        <h2>Оценка сохранена</h2>
+
+        <p id="assessment-result-meta"></p>
+    </div>
+
+    <div
+        id="risk-results"
+        class="risk-results"
+    ></div>
+</section>
+
+<dialog
+    id="risk-details-dialog"
+    class="details-modal"
+    aria-labelledby="risk-details-title"
+>
+    <div class="details-modal__panel">
+        <header class="details-modal__header">
+            <div class="details-modal__heading">
+                <p class="eyebrow">
+                    Подробнее об оценке
+                </p>
+
+                <div class="details-modal__identity">
+                    <h2 id="risk-details-title">
+                        Рекомендации и источники
+                    </h2>
+
+                    <span
+                        id="risk-details-level"
+                        class="risk-level risk-level--unknown"
+                    >
+                        РИСК НЕ ОПРЕДЕЛЁН
+                    </span>
+                </div>
+            </div>
+
+            <form method="dialog">
+                <button
+                    class="details-modal__close"
+                    type="submit"
+                    aria-label="Закрыть подробную информацию"
+                >
+                    ×
+                </button>
+            </form>
+        </header>
+
+        <div class="details-modal__content">
+            <section class="details-modal__section">
+                <h3>Что означает результат</h3>
+
+                <div
+                    id="risk-details-meaning"
+                    class="result-meaning"
+                >
+                    <p class="details-modal__placeholder">
+                        Выберите результат оценки.
+                    </p>
+                </div>
+            </section>
+
+            <section class="details-modal__section">
+                <h3>Что рекомендуется сделать</h3>
+
+                <div
+                    id="risk-details-recommendations"
+                    class="recommendation-details"
+                >
+                    <p class="details-modal__placeholder">
+                        Выберите результат оценки.
+                    </p>
+                </div>
+            </section>
+
+            <section class="details-modal__section">
+                <h3>Как рассчитано</h3>
+
+                <div
+                    id="risk-details-calculation"
+                    class="calculation-details"
+                >
+                    <p class="details-modal__placeholder">
+                        Выберите результат оценки.
+                    </p>
+                </div>
+            </section>
+
+            <section class="details-modal__section">
+                <h3>Какие данные использованы</h3>
+
+                <div
+                    id="risk-details-inputs"
+                    class="input-data-summary"
+                >
+                    <p class="details-modal__placeholder">
+                        Выберите результат оценки.
+                    </p>
+                </div>
+            </section>
+
+            <section class="details-modal__section">
+                <h3>Источники</h3>
+
+                <div
+                    id="risk-details-sources"
+                    class="source-details"
+                >
+                    <p class="details-modal__placeholder">
+                        Выберите результат оценки.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</dialog>
+
+<script
+    src="{{ url_for('static', filename='js/assessment.js') }}"
+    defer
+></script>
+
 {% endblock %}

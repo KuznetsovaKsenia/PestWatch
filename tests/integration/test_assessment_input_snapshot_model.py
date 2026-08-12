@@ -78,6 +78,7 @@ def test_current_weather_snapshot_can_be_persisted(app):
                 weather_soil_temperature=18.0,
                 weather_soil_temperature_6cm=16.0,
                 weather_soil_temperature_18cm=10.0,
+                saturation_deficit_mm_hg=1.25,
             )
         )
 
@@ -116,6 +117,11 @@ def test_current_weather_snapshot_can_be_persisted(app):
         assert (
             saved.weather_soil_temperature_18cm
             == pytest.approx(10.0)
+        )
+
+        assert (
+            saved.saturation_deficit_mm_hg
+            == pytest.approx(1.25)
         )
 
 
@@ -199,6 +205,16 @@ def test_degree_days_snapshot_can_be_persisted(app):
                 degree_days_method=(
                     "DAILY_MEAN_ABOVE_BASE"
                 ),
+                degree_days_observations=[
+                    {
+                        "date": "2026-05-10",
+                        "mean_temperature": 20.0,
+                    },
+                    {
+                        "date": "2026-05-11",
+                        "mean_temperature": 21.0,
+                    },
+                ],
                 historical_observations=[
                     {
                         "date": "2026-05-01",
@@ -246,6 +262,17 @@ def test_degree_days_snapshot_can_be_persisted(app):
             saved.degree_days_method
             == "DAILY_MEAN_ABOVE_BASE"
         )
+
+        assert saved.degree_days_observations == [
+            {
+                "date": "2026-05-10",
+                "mean_temperature": 20.0,
+            },
+            {
+                "date": "2026-05-11",
+                "mean_temperature": 21.0,
+            },
+        ]
 
         assert saved.historical_observations == [
             {

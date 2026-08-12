@@ -45,4 +45,5 @@ def test_risk_input_capability_values():
         RiskInputCapability.CURRENT_WEATHER,
         RiskInputCapability.SOIL_TEMPERATURE_10CM,
         RiskInputCapability.DEGREE_DAYS_10C,
+        RiskInputCapability.SATURATION_DEFICIT,
     }

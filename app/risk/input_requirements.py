@@ -5,6 +5,7 @@ class RiskInputRequirements:
     _REQUIREMENTS = {
         "TICK": frozenset({
             RiskInputCapability.CURRENT_WEATHER,
+            RiskInputCapability.SATURATION_DEFICIT,
         }),
         "CABBAGE_APHID": frozenset({
             RiskInputCapability.CURRENT_WEATHER,

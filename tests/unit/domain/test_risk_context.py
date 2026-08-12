@@ -157,3 +157,14 @@ def test_context_is_immutable(
             field_name,
             new_value,
         )
+
+def test_context_preserves_saturation_deficit():
+    context = RiskContext(
+        weather=create_weather(),
+        saturation_deficit_mm_hg=1.25,
+    )
+
+    assert (
+        context.saturation_deficit_mm_hg
+        == pytest.approx(1.25)
+    )

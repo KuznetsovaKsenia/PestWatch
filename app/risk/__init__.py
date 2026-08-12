@@ -1,3 +1,6 @@
+from .codling_moth_season_start import (
+    CodlingMothSeasonStartDetector,
+)
 from .calculator import RiskCalculator
 from .calculator_registry import (
     RiskCalculatorNotFoundError,
@@ -19,6 +22,7 @@ from .policy import RiskPolicy
 from .engine import RiskEngine
 
 __all__ = [
+    "CodlingMothSeasonStartDetector",
     "RiskCalculator",
     "RiskCalculatorNotFoundError",
     "RiskCalculatorRegistry",

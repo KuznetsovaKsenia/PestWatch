@@ -35,9 +35,12 @@ def evaluate(
     threat_code: str,
     calculator,
     weather: WeatherData,
+    *,
+    saturation_deficit: float | None = None,
 ):
     context = RiskContext(
         weather=weather,
+        saturation_deficit_mm_hg=saturation_deficit,
     )
 
     factors = calculator.evaluate(
@@ -57,63 +60,15 @@ def evaluate(
 @pytest.mark.parametrize(
     (
         "temperature",
-        "expected_factor_state",
-        "expected_status",
-        "expected_level",
-    ),
-    [
-        (
-            12.0,
-            RiskFactorState.MATCHED,
-            RiskStatus.CALCULATED,
-            RiskLevel.HIGH,
-        ),
-        (
-            5.0,
-            RiskFactorState.NOT_MATCHED,
-            RiskStatus.CALCULATED,
-            RiskLevel.LOW,
-        ),
-        (
-            None,
-            RiskFactorState.MISSING,
-            RiskStatus.INSUFFICIENT_DATA,
-            None,
-        ),
-    ],
-)
-def test_tick_calculator_to_risk_engine(
-    temperature,
-    expected_factor_state,
-    expected_status,
-    expected_level,
-):
-    result = evaluate(
-        threat_code="TICK",
-        calculator=TickRiskCalculator(),
-        weather=create_weather(
-           temperature=temperature,
-       ),
-    )
-
-    assert result.threat_code == "TICK"
-    assert result.factors[0].state == expected_factor_state
-    assert result.status == expected_status
-    assert result.risk_level == expected_level
-
-
-@pytest.mark.parametrize(
-    (
-        "temperature",
-        "humidity",
+        "saturation_deficit",
         "expected_states",
         "expected_status",
         "expected_level",
     ),
     [
         (
-            25.5,
-            65.0,
+            18.0,
+            1.5,
             (
                 RiskFactorState.MATCHED,
                 RiskFactorState.MATCHED,
@@ -122,8 +77,8 @@ def test_tick_calculator_to_risk_engine(
             RiskLevel.HIGH,
         ),
         (
-            25.5,
-            50.0,
+            18.0,
+            8.0,
             (
                 RiskFactorState.MATCHED,
                 RiskFactorState.NOT_MATCHED,
@@ -132,8 +87,8 @@ def test_tick_calculator_to_risk_engine(
             RiskLevel.ELEVATED,
         ),
         (
-            20.0,
-            50.0,
+            5.0,
+            8.0,
             (
                 RiskFactorState.NOT_MATCHED,
                 RiskFactorState.NOT_MATCHED,
@@ -142,12 +97,86 @@ def test_tick_calculator_to_risk_engine(
             RiskLevel.LOW,
         ),
         (
+            18.0,
+            None,
+            (
+                RiskFactorState.MATCHED,
+                RiskFactorState.MISSING,
+            ),
+            RiskStatus.INSUFFICIENT_DATA,
+            None,
+        ),
+    ],
+)
+def test_tick_calculator_to_risk_engine(
+    temperature,
+    saturation_deficit,
+    expected_states,
+    expected_status,
+    expected_level,
+):
+    result = evaluate(
+        threat_code="TICK",
+        calculator=TickRiskCalculator(),
+        weather=create_weather(
+            temperature=temperature,
+            humidity=91.0,
+        ),
+        saturation_deficit=saturation_deficit,
+    )
+
+    assert result.threat_code == "TICK"
+
+    assert tuple(
+        factor.state
+        for factor in result.factors
+    ) == expected_states
+
+    assert result.status == expected_status
+    assert result.risk_level == expected_level
+
+
+@pytest.mark.parametrize(
+    (
+        "temperature",
+        "humidity",
+        "expected_state",
+        "expected_status",
+        "expected_level",
+    ),
+    [
+        (
+            18.0,
+            91.0,
+            RiskFactorState.MATCHED,
+            RiskStatus.CALCULATED,
+            RiskLevel.HIGH,
+        ),
+        (
+            14.9,
+            91.0,
+            RiskFactorState.NOT_MATCHED,
+            RiskStatus.CALCULATED,
+            RiskLevel.LOW,
+        ),
+        (
+            25.0,
+            30.0,
+            RiskFactorState.MATCHED,
+            RiskStatus.CALCULATED,
+            RiskLevel.HIGH,
+        ),
+        (
+            25.1,
+            65.0,
+            RiskFactorState.NOT_MATCHED,
+            RiskStatus.CALCULATED,
+            RiskLevel.LOW,
+        ),
+        (
             None,
             65.0,
-            (
-                RiskFactorState.MISSING,
-                RiskFactorState.MATCHED,
-            ),
+            RiskFactorState.MISSING,
             RiskStatus.INSUFFICIENT_DATA,
             None,
         ),
@@ -156,7 +185,7 @@ def test_tick_calculator_to_risk_engine(
 def test_cabbage_aphid_calculator_to_risk_engine(
     temperature,
     humidity,
-    expected_states,
+    expected_state,
     expected_status,
     expected_level,
 ):
@@ -170,11 +199,7 @@ def test_cabbage_aphid_calculator_to_risk_engine(
     )
 
     assert result.threat_code == "CABBAGE_APHID"
-
-    assert tuple(
-        factor.state
-        for factor in result.factors
-    ) == expected_states
-
+    assert len(result.factors) == 1
+    assert result.factors[0].state == expected_state
     assert result.status == expected_status
     assert result.risk_level == expected_level

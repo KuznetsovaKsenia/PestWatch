@@ -102,6 +102,7 @@ class FakeContext:
     degree_days_10c: (
         DegreeDaysResult | None
     ) = None
+    saturation_deficit_mm_hg: float | None = None
 
 
 class FakeEvaluator:
@@ -118,6 +119,7 @@ class FakeEvaluator:
         *,
         weather=None,
         historical_temperatures=None,
+        degree_days_season_started=None,
     ):
         self.calls.append(
             (

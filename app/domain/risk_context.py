@@ -12,3 +12,5 @@ class RiskContext:
         SoilTemperatureEstimate | None
     ) = None
     degree_days_10c: DegreeDaysResult | None = None
+    degree_days_season_started: bool | None = None
+    saturation_deficit_mm_hg: float | None = None

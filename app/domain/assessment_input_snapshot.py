@@ -15,6 +15,7 @@ class AssessmentInputSnapshot:
         SoilTemperatureEstimate | None
     ) = None
     degree_days_10c: DegreeDaysResult | None = None
+    saturation_deficit_mm_hg: float | None = None
     historical_observations: (
         tuple[DailyTemperature, ...] | None
     ) = None
