@@ -39,10 +39,12 @@ def test_calculation_details_use_user_facing_terms(client):
 
 
 def test_tick_saturation_deficit_is_explained(client):
-    text = client.get("/static/js/assessment.js").data.decode("utf-8")
-    assert "Дефицит насыщения показывает" in text
-    assert "насколько воздух сухой" in text
-    assert "чем меньше значение" in text
+    text = client.get(
+        "/static/js/assessment.js"
+    ).data.decode("utf-8")
+
+    assert "Дефицит влажности показывает" in text
+    assert "чем меньше значение, тем более влажные условия" in text
 
 
 def test_colorado_soil_calculation_uses_depth_wording(client):
