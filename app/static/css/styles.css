@@ -25,3 +25,26 @@
 
 @media(max-width:800px){.assessment-layout{grid-template-columns:1fr}.site-header__inner{align-items:flex-start;gap:10px;flex-direction:column}.risk-results,.risk-results:has(.risk-card + .risk-card){grid-template-columns:1fr}.weather-summary{grid-template-columns:1fr;gap:7px;padding-bottom:10px}.weather-summary__items{grid-template-columns:repeat(4,minmax(85px,1fr))}.weather-item{justify-content:flex-start}}
 @media(max-width:600px){.page{padding:18px 14px 34px}.form-grid{grid-template-columns:1fr}.form-field--wide{grid-column:auto}.risk-head{align-items:flex-start;flex-direction:column}.risk-level{font-size:16px}.main-nav{flex-wrap:wrap}.weather-summary__title{flex-wrap:wrap;white-space:normal}.weather-summary__items{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px}.weather-item{justify-content:flex-start}.details-modal{width:calc(100vw - 20px);max-height:calc(100vh - 20px);border-radius:13px}.details-modal__panel{max-height:calc(100vh - 20px)}.details-modal__header{padding:15px 15px 12px}.details-modal__identity{align-items:flex-start;flex-direction:column;gap:8px}.details-modal__header h2{font-size:21px}.details-modal__content{padding:2px 15px calc(16px + env(safe-area-inset-bottom))}}
+/* SLICE 3.3 — CALCULATION DETAILS */
+.details-modal__placeholder{padding:10px 0}
+.calculation-details{display:grid;gap:10px}
+.calculation-block{padding:11px 12px;background:#f8faf7;border:1px solid #e1e8e0;border-radius:9px}
+.calculation-block h4{margin:0 0 8px;font-size:14px;color:#344239}
+.calculation-block__rows{display:grid;gap:6px}
+.calculation-row{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(140px,1fr) auto;align-items:center;gap:8px 12px;padding-top:6px;border-top:1px solid #e9eee8;font-size:13px}
+.calculation-row:first-child{padding-top:0;border-top:0}
+.calculation-row__label{color:var(--muted)}
+.calculation-row__value{font-weight:700}
+.calculation-row__state{justify-self:end;color:var(--primary);font-size:11px;font-weight:700;text-align:right}
+@media(max-width:600px){.calculation-row{grid-template-columns:1fr;gap:2px}.calculation-row__state{justify-self:start}}
+
+
+/* SLICE 3.3 FIX A — calculation details UX */
+.calculation-block__note{
+    margin:9px 0 0!important;
+    padding-top:8px;
+    color:var(--muted);
+    border-top:1px solid #e9eee8;
+    font-size:12px!important;
+    line-height:1.4;
+}
