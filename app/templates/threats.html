@@ -1,15 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Каталог — PestWatch{% endblock %}
+{% block title %}Каталог угроз — PestWatch{% endblock %}
 
 {% block content %}
 <section>
-    <h2>Клещи и вредители растений</h2>
+    <h1>Клещи и вредители растений</h1>
 
     <p>
         PestWatch поддерживает оценку сезонного риска
         для следующих видов:
     </p>
+
+    {% set category_names = {
+        "HUMAN": "Человек",
+        "VEGETABLE_GARDEN": "Огород",
+        "GARDEN": "Сад"
+    } %}
 
     <div class="threat-list">
         {% for threat in threats %}
@@ -20,10 +26,22 @@
 
                 <p>
                     <strong>Категория:</strong>
-                    {{ threat.category }}
+                    {{ category_names.get(
+                        threat.category,
+                        threat.category
+                    ) }}
                 </p>
             </article>
         {% endfor %}
+    </div>
+
+    <div class="demo-mode-entry">
+        <a
+            class="demo-mode-entry__button"
+            href="/?demo=1"
+        >
+            Демонстрационный режим
+        </a>
     </div>
 </section>
 {% endblock %}

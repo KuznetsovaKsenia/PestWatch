@@ -1,4 +1,127 @@
 const form=document.getElementById("assessment-form"),submit=document.getElementById("assessment-submit"),errorBox=document.getElementById("assessment-error"),section=document.getElementById("assessment-result"),meta=document.getElementById("assessment-result-meta"),container=document.getElementById("risk-results");
+const locationNameInput=document.getElementById("location-name");
+const locationRegionInput=document.getElementById("location-region");
+const locationCountryInput=document.getElementById("location-country");
+const demoLocationSelect=document.getElementById("demo-location-select");
+const demoModeBadge=document.getElementById("demo-mode-banner");
+const realLocationField=document.getElementById("real-location-field");
+const demoLocationField=document.getElementById("demo-location-field");
+const demoModeExit=document.getElementById("demo-mode-exit");
+
+// =====================================================================
+// EPIC 13 / SLICE 13.7 — DEMO MODE UI CONTRACT
+//
+// Demo mode is activated only by ?demo=1.
+// The public form remains visually almost identical:
+// - city becomes a fixed select;
+// - region and country are filled automatically;
+// - the backend receives only scenario_id + profile.
+// =====================================================================
+
+const demoScenarios=[
+ {scenarioId:"DEMO_A",name:"Архангельск",region:"Архангельская область",country:"Россия"},
+ {scenarioId:"DEMO_B",name:"Казань",region:"Республика Татарстан",country:"Россия"},
+ {scenarioId:"DEMO_C",name:"Омск",region:"Омская область",country:"Россия"},
+ {scenarioId:"DEMO_D",name:"Пермь",region:"Пермский край",country:"Россия"},
+ {scenarioId:"DEMO_E",name:"Тула",region:"Тульская область",country:"Россия"},
+ {scenarioId:"DEMO_F",name:"Курск",region:"Курская область",country:"Россия"},
+ {scenarioId:"DEMO_G",name:"Томск",region:"Томская область",country:"Россия"},
+];
+
+function isDemoMode(){
+ return new URLSearchParams(window.location.search).get("demo")==="1"
+}
+
+function findDemoScenario(scenarioId){
+ return demoScenarios.find(scenario=>scenario.scenarioId===scenarioId)||null
+}
+
+function populateDemoLocationSelect(){
+ if(!demoLocationSelect)return;
+
+ demoLocationSelect.innerHTML=[
+  '<option value="">Выберите населённый пункт</option>',
+  ...demoScenarios.map(
+   scenario=>`<option value="${esc(scenario.scenarioId)}">${esc(scenario.name)}</option>`
+  ),
+ ].join("")
+}
+
+function applyDemoLocation(scenarioId){
+ const scenario=findDemoScenario(scenarioId);
+
+ if(!scenario){
+  if(locationNameInput)locationNameInput.value="";
+  if(locationRegionInput)locationRegionInput.value="";
+  if(locationCountryInput)locationCountryInput.value="Россия";
+  return
+ }
+
+ if(locationNameInput)locationNameInput.value=scenario.name;
+ if(locationRegionInput)locationRegionInput.value=scenario.region;
+ if(locationCountryInput)locationCountryInput.value=scenario.country
+}
+
+function resetAssessmentResult(){
+ currentAssessment=null;
+
+ if(section)section.hidden=true;
+ if(container)container.innerHTML="";
+ if(meta)meta.textContent=""
+}
+
+function configureDemoModeUi(){
+ const demo=isDemoMode();
+
+ if(demoModeBadge){
+  demoModeBadge.hidden=!demo;
+ }
+
+ if(realLocationField){
+  realLocationField.hidden=demo;
+ }
+
+ if(demoLocationField){
+  demoLocationField.hidden=!demo;
+ }
+
+ if(locationNameInput){
+  locationNameInput.required=!demo;
+ }
+
+ if(demoLocationSelect){
+  demoLocationSelect.required=demo;
+ }
+
+ if(locationRegionInput){
+  locationRegionInput.readOnly=demo;
+
+  if(!demo){
+   locationRegionInput.value="";
+  }
+ }
+
+ if(locationCountryInput){
+  locationCountryInput.readOnly=demo;
+
+  if(demo){
+   locationCountryInput.value="Россия";
+  }
+ }
+}
+
+if(demoModeExit){
+ demoModeExit.addEventListener("click",event=>{
+  event.preventDefault();
+
+  window.localStorage.removeItem(
+   "pestwatch.demoMode"
+  );
+
+  window.location.href="/";
+ });
+}
+
 const profiles={HUMAN:"Человек",VEGETABLE_GARDEN:"Огород",GARDEN:"Сад"};
 const threats={TICK:"Клещи",COLORADO_BEETLE:"Колорадский жук",CABBAGE_APHID:"Капустная тля",CODLING_MOTH:"Яблонная плодожорка"};
 const levels={LOW:"НИЗКИЙ РИСК",MODERATE:"УМЕРЕННЫЙ РИСК",ELEVATED:"ПОВЫШЕННЫЙ РИСК",HIGH:"ВЫСОКИЙ РИСК"};
@@ -32,9 +155,107 @@ function card(r,a){const level=(r.risk_level||"unknown").toLowerCase(),factors=(
 let currentAssessment=null;
 
 function render(a){currentAssessment=a;meta.textContent=[profiles[a.profile]||a.profile,a.location.name,a.location.region,dateRu(a.assessment_date)].join(" · ");container.innerHTML=weatherSummary(a)+a.risk_results.map(r=>card(r,a)).join("");section.hidden=false;section.scrollIntoView({behavior:"smooth",block:"start"})}
-function payload(){const d=new FormData(form);return{location:{name:d.get("location_name"),region:d.get("location_region"),country:d.get("location_country")},profile:d.get("profile")}}
-function publicError(b){if(b?.error?.code==="LOCATION_NOT_FOUND")return"Не удалось найти указанное местоположение. Проверьте населённый пункт и регион.";if(b?.error?.code==="LOCATION_SERVICE_UNAVAILABLE")return"Сервис определения местоположения временно недоступен. Попробуйте позже.";if(b?.error?.code==="INVALID_REQUEST")return"Проверьте заполненные данные и попробуйте снова.";return"Не удалось выполнить оценку. Попробуйте ещё раз."}
-form.addEventListener("submit",async e=>{e.preventDefault();errorBox.hidden=true;submit.disabled=true;submit.textContent="Выполняется оценка...";try{const r=await fetch("/api/assessments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload())}),b=await r.json();if(!r.ok||!b.success){errorBox.textContent=publicError(b);errorBox.hidden=false;return}render(b.data)}catch(_){errorBox.textContent="Не удалось связаться с PestWatch. Попробуйте ещё раз.";errorBox.hidden=false}finally{submit.disabled=false;submit.textContent="Выполнить оценку"}});
+
+function assessmentPayload(){
+ const d=new FormData(form);
+
+ if(isDemoMode()){
+  return{
+   scenario_id:demoLocationSelect?.value||"",
+   profile:d.get("profile"),
+  }
+ }
+
+ return{
+  location:{
+   name:d.get("location_name"),
+   region:d.get("location_region"),
+   country:d.get("location_country"),
+  },
+  profile:d.get("profile"),
+ }
+}
+
+function assessmentEndpoint(){
+ return isDemoMode()
+  ?"/api/assessments/demo"
+  :"/api/assessments"
+}
+
+function publicError(b){
+ if(b?.error?.code==="LOCATION_NOT_FOUND")return"Не удалось найти указанное местоположение. Проверьте населённый пункт и регион.";
+ if(b?.error?.code==="LOCATION_SERVICE_UNAVAILABLE")return"Сервис определения местоположения временно недоступен. Попробуйте позже.";
+ if(b?.error?.code==="DEMO_SCENARIO_NOT_FOUND")return"Не удалось запустить выбранный демонстрационный сценарий. Выберите населённый пункт ещё раз.";
+ if(b?.error?.code==="INVALID_REQUEST")return"Проверьте заполненные данные и попробуйте снова.";
+ return"Не удалось выполнить оценку. Попробуйте ещё раз."
+}
+
+if(demoLocationSelect){
+ demoLocationSelect.addEventListener("change",()=>{
+  const scenario=findDemoScenario(
+   demoLocationSelect.value
+  );
+
+  if(!scenario){
+   if(locationRegionInput){
+    locationRegionInput.value="";
+   }
+
+   if(locationCountryInput){
+    locationCountryInput.value="Россия";
+   }
+
+   return;
+  }
+
+  if(locationRegionInput){
+   locationRegionInput.value=scenario.region;
+  }
+
+  if(locationCountryInput){
+   locationCountryInput.value=scenario.country;
+  }
+ });
+}
+
+configureDemoModeUi();
+
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ errorBox.hidden=true;
+
+ if(isDemoMode()&&!demoLocationSelect?.value){
+  errorBox.textContent="Выберите населённый пункт.";
+  errorBox.hidden=false;
+  return
+ }
+
+ submit.disabled=true;
+ submit.textContent="Выполняется оценка...";
+
+ try{
+  const r=await fetch(assessmentEndpoint(),{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(assessmentPayload())
+  });
+  const b=await r.json();
+
+  if(!r.ok||!b.success){
+   errorBox.textContent=publicError(b);
+   errorBox.hidden=false;
+   return
+  }
+
+  render(b.data)
+ }catch(_){
+  errorBox.textContent="Не удалось связаться с PestWatch. Попробуйте ещё раз.";
+  errorBox.hidden=false
+ }finally{
+  submit.disabled=false;
+  submit.textContent="Выполнить оценку"
+ }
+});
 
 // =====================================================================
 // SLICE 3.2A — MODAL SHELL
@@ -137,9 +358,9 @@ function tickCalculationDetails(result,assessment){
   ]),
   detailBlock("Влажность воздуха",[
    detailRow("Относительная влажность",w?.humidity==null?"Нет данных":`${oneDecimal(w.humidity)} %`),
-   detailRow("Дефицит насыщения воздуха влагой",saturation?.actual_value==null?"Нет данных":`${oneDecimal(saturation.actual_value)} мм рт. ст.`,detailState(saturation)),
+   detailRow("Дефицит влажности воздуха",saturation?.actual_value==null?"Нет данных":`${oneDecimal(saturation.actual_value)} мм рт. ст.`,detailState(saturation)),
    detailRow("Условие для оценки","менее 5 мм рт. ст."),
-  ],"Дефицит насыщения показывает, насколько воздух сухой: чем меньше значение, тем более влажные условия."),
+  ],"Дефицит влажности показывает, насколько воздух сухой: чем меньше значение, тем более влажные условия."),
   detailBlock("Итог",[
    detailRow("Выполнено условий",`${matched} из ${known}`),
    detailRow("Уровень риска",levels[result.risk_level]||"Не определён"),

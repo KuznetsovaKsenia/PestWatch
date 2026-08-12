@@ -3,6 +3,23 @@
 {% block title %}Оценка риска — PestWatch{% endblock %}
 
 {% block content %}
+
+<div
+    id="demo-mode-banner"
+    class="demo-mode-banner"
+    hidden
+>
+    <span>Демонстрационный режим</span>
+
+    <a
+        id="demo-mode-exit"
+        class="demo-mode-banner__exit"
+        href="/"
+    >
+        Выйти
+    </a>
+</div>
+
 <section class="hero">
     <div class="hero__content">
         <p class="eyebrow">
@@ -40,7 +57,15 @@
                 <legend>Местоположение</legend>
 
                 <div class="form-grid">
-                    <div class="form-field form-field--wide">
+
+                    <!-- =================================================
+                         REAL MODE LOCATION
+                         ================================================= -->
+
+                    <div
+                        id="real-location-field"
+                        class="form-field form-field--wide"
+                    >
                         <label for="location-name">
                             Населённый пункт
                         </label>
@@ -53,6 +78,60 @@
                             autocomplete="address-level2"
                             placeholder="Например, Москва"
                         >
+                    </div>
+
+                    <!-- =================================================
+                         DEMO MODE LOCATION
+                         Используется вместо обычного поля города.
+                         Технические DEMO_A ... DEMO_G пользователю
+                         не показываются.
+                         ================================================= -->
+
+                    <div
+                        id="demo-location-field"
+                        class="form-field form-field--wide"
+                        hidden
+                    >
+                        <label for="demo-location-select">
+                            Населённый пункт
+                        </label>
+
+                        <select
+                            id="demo-location-select"
+                            name="demo_location"
+                        >
+                            <option value="">
+                                Выберите населённый пункт
+                            </option>
+
+                            <option value="DEMO_A">
+                                Архангельск
+                            </option>
+
+                            <option value="DEMO_B">
+                                Казань
+                            </option>
+
+                            <option value="DEMO_C">
+                                Омск
+                            </option>
+
+                            <option value="DEMO_D">
+                                Пермь
+                            </option>
+
+                            <option value="DEMO_E">
+                                Тула
+                            </option>
+
+                            <option value="DEMO_F">
+                                Курск
+                            </option>
+
+                            <option value="DEMO_G">
+                                Томск
+                            </option>
+                        </select>
                     </div>
 
                     <div class="form-field">
@@ -86,7 +165,10 @@
                     </div>
                 </div>
 
-                <p class="field-hint">
+                <p
+                    id="location-field-hint"
+                    class="field-hint"
+                >
                     Координаты будут определены автоматически.
                 </p>
             </fieldset>
@@ -333,4 +415,5 @@
     src="{{ url_for('static', filename='js/assessment.js') }}"
     defer
 ></script>
+
 {% endblock %}
