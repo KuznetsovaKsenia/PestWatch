@@ -49,9 +49,9 @@ def create_context(
         (None, RiskFactorState.MISSING),
         (-5.0, RiskFactorState.NOT_MATCHED),
         (0.0, RiskFactorState.NOT_MATCHED),
-        (12.9, RiskFactorState.NOT_MATCHED),
-        (13.0, RiskFactorState.MATCHED),
-        (13.1, RiskFactorState.MATCHED),
+        (10.9, RiskFactorState.NOT_MATCHED),
+        (11.0, RiskFactorState.MATCHED),
+        (11.1, RiskFactorState.MATCHED),
         (20.0, RiskFactorState.MATCHED),
     ],
 )
@@ -105,7 +105,7 @@ def test_colorado_beetle_contains_expected_threshold():
         create_context(14.0)
     )[0]
 
-    assert factor.expected == ">= 13 °C"
+    assert factor.expected == ">= 11 °C"
 
 
 @pytest.mark.parametrize(

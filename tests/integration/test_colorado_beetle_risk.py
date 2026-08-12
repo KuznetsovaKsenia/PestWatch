@@ -91,9 +91,9 @@ def evaluate(
             12.0,
             9.0,
             11.0,
-            RiskFactorState.NOT_MATCHED,
+            RiskFactorState.MATCHED,
             RiskStatus.CALCULATED,
-            RiskLevel.LOW,
+            RiskLevel.HIGH,
         ),
         (
             None,

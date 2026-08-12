@@ -19,8 +19,8 @@ function factorView(f,threatCode,a){const v=temperatureValue(f.actual_value);
  if(f.factor==="AIR_TEMPERATURE")return{title:"Температура воздуха",now:v===null?"Сейчас: нет данных":`Сейчас: ${v} °C`,target:null,text:f.explanation||""};
  if(f.factor==="SATURATION_DEFICIT"){const humidity=round(weather(a)?.humidity);return{title:"Влажность воздуха",now:humidity===null?"Сейчас: нет данных":`Сейчас: ${humidity} %`,target:"Для активности важен достаточно влажный воздух",text:f.state==="MATCHED"?"Воздух достаточно влажный для активности клещей.":"Воздух сейчас слишком сухой для длительной активности клещей."};}
  if(f.factor==="RELATIVE_HUMIDITY")return{title:"Относительная влажность",now:v===null?"Сейчас: нет данных":`Сейчас: ${v} %`,target:null,text:f.explanation||""};
- if(f.factor==="SOIL_TEMPERATURE_10CM")return{title:"Температура почвы",now:v===null?"Расчётная температура: нет данных":`Расчётная температура на глубине 10 см: около ${v} °C`,target:"Для начала активности: от 13 °C",text:f.state==="MATCHED"?"Почва достаточно прогрелась для активности вредителя.":"Почва ещё недостаточно прогрелась для активности вредителя."};
- if(f.factor==="DEGREE_DAYS_ABOVE_10C")return{title:"Сезонная активность",now:null,target:null,text:f.state==="MATCHED"?"Накопленного с начала сезона тепла достаточно для начала лёта вредителя.":"Температурные условия для начала сезонного лёта вредителя ещё не сформировались."};
+ if(f.factor==="SOIL_TEMPERATURE_10CM")return{title:"Температура почвы",now:v===null?"Расчётная температура: нет данных":`Расчётная температура на глубине 10 см: около ${v} °C`,target:"Для начала активности: от 11 °C",text:f.state==="MATCHED"?"Почва достаточно прогрелась для активности вредителя.":"Почва ещё недостаточно прогрелась для активности вредителя."};
+ if(f.factor==="DEGREE_DAYS_ABOVE_10C")return{title:"Сезонная активность",now:null,target:null,text:f.state==="MATCHED"?"Накопленного с начала сезона тепла достаточно для периода возможной сезонной активности вредителя.":"Накопленного с начала сезона тепла пока недостаточно для периода возможной сезонной активности вредителя."};
  return{title:"Фактор риска",now:v===null?null:`Текущее значение: ${v}`,target:null,text:f.explanation||""}}
 function factorHtml(f,threatCode,a){const p=factorView(f,threatCode,a),s=(f.state||"MISSING").toLowerCase(),details=[p.now,p.target].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join("");
  return `<li class="factor-item factor-item--${esc(s)}"><div class="factor-head"><strong>${esc(p.title)}</strong><span class="factor-state">${esc(states[f.state]||"Нет данных")}</span></div>${details?`<div class="factor-details">${details}</div>`:""}<p>${esc(p.text)}</p></li>`}
@@ -186,7 +186,7 @@ function coloradoBeetleCalculationDetails(result,assessment){
    detailRow("Метод расчёта",estimate?.method==="LINEAR_INTERPOLATION"?"Линейная интерполяция":(estimate?.method||"Нет данных")),
   ],"Линейная интерполяция рассчитывает промежуточную температуру между известными значениями на глубине 6 и 18 см."),
   detailBlock("Условие для оценки",[
-   detailRow("Для начала активности","от 13 °C"),
+   detailRow("Для начала активности","от 11 °C"),
   ]),
   detailBlock("Итог",[
    detailRow("Уровень риска",levels[result.risk_level]||"Не определён"),
@@ -209,7 +209,7 @@ function codlingMothCalculationDetails(result,assessment){
    detailRow("Накопленная сумма эффективных температур",degreeDays?.total==null?"Нет данных":`${oneDecimal(degreeDays.total)} градусо-дня`,detailState(factor)),
   ]),
   detailBlock("Условие для оценки",[
-   detailRow("Для начала сезонного лёта","130 градусо-дней"),
+   detailRow("Условие для температурной оценки сезонной активности","130 градусо-дней"),
   ]),
   detailBlock("Итог",[
    detailRow("Уровень риска",levels[result.risk_level]||"Не определён"),
