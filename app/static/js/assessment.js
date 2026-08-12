@@ -44,6 +44,10 @@ const riskDetailsDialog=document.getElementById("risk-details-dialog");
 const riskDetailsTitle=document.getElementById("risk-details-title");
 const riskDetailsLevel=document.getElementById("risk-details-level");
 const riskDetailsCalculation=document.getElementById("risk-details-calculation");
+const riskDetailsRecommendations=document.getElementById("risk-details-recommendations");
+const riskDetailsSources=document.getElementById("risk-details-sources");
+const riskDetailsMeaning=document.getElementById("risk-details-meaning");
+const riskDetailsInputs=document.getElementById("risk-details-inputs");
 
 let riskDetailsReturnFocus=null;
 
@@ -154,9 +158,7 @@ function cabbageAphidCalculationDetails(result,assessment){
   ]),
   detailBlock("Относительная влажность",[
    detailRow("Сейчас",w?.humidity==null?"Нет данных":`${oneDecimal(w.humidity)} %`,"Справочно"),
-   detailRow(
-    "Влияние на оценку риска",
-    "Не влияет на текущую оценку риска"),
+   detailRow("Участие в уровне риска","Не влияет на текущую оценку риска"),
   ]),
   detailBlock("Итог",[
    detailRow("Уровень риска",levels[result.risk_level]||"Не определён"),
@@ -242,6 +244,441 @@ function bindCalculationDetails(result){
  )
 }
 
+
+
+// =====================================================================
+// SLICE 3.4B — RECOMMENDATIONS UI
+// Recommendations are presentation-only guidance derived from the
+// persisted RiskResult. They do not fetch data, recalculate risk,
+// confirm pest presence, or automatically recommend chemical treatment.
+// =====================================================================
+
+function recommendationItem(title,text,tone="default"){
+ return `<div class="recommendation-item recommendation-item--${esc(tone)}"><h4>${esc(title)}</h4><p>${esc(text)}</p></div>`
+}
+
+function tickRecommendations(result){
+ const higherRisk=["ELEVATED","HIGH"].includes(result.risk_level);
+
+ if(higherRisk){
+  return [
+   recommendationItem(
+    "Что делать сейчас",
+    "Погодные условия позволяют клещам сохранять активность. При посещении леса, парков и мест с высокой травой используйте закрытую светлую одежду, средства защиты от клещей и регулярно осматривайте одежду и тело. После возвращения осмотрите также домашних животных.",
+    "attention"
+   ),
+   recommendationItem(
+    "На что обратить внимание",
+    "Клещи могут находиться в высокой траве, кустарнике и лесной подстилке. Осматривайте одежду и открытые участки тела во время прогулки и после возвращения."
+   ),
+   recommendationItem(
+    "Важно",
+    "PestWatch оценивает погодные условия для возможной активности клещей, но не определяет их фактическое наличие в конкретном месте.",
+    "note"
+   ),
+  ].join("")
+ }
+
+ return [
+  recommendationItem(
+   "Что делать сейчас",
+   "Текущая погода менее благоприятна для активности клещей, но это не означает, что клещей рядом нет. При прогулках в лесу, парках и местах с высокой травой всё равно стоит соблюдать меры защиты."
+  ),
+  recommendationItem(
+   "На что обратить внимание",
+   "Если планируется прогулка по высокой траве, кустарнику или лесу, после возвращения осмотрите одежду, тело и домашних животных."
+  ),
+  recommendationItem(
+   "Важно",
+   "Низкая температурно-погодная оценка не означает отсутствия клещей.",
+   "note"
+  ),
+ ].join("")
+}
+
+function cabbageAphidRecommendations(result){
+ const higherRisk=["ELEVATED","HIGH"].includes(result.risk_level);
+
+ return [
+  recommendationItem(
+   "Что делать сейчас",
+   higherRisk
+    ?"Температурные условия благоприятны для развития капустной тли. Осмотрите молодые листья, точки роста и формирующиеся кочаны или соцветия, особенно нижнюю сторону листьев."
+    :"Сейчас температура менее благоприятна для быстрого развития тли. Это не означает её отсутствия — продолжайте периодически осматривать растения.",
+   higherRisk?"attention":"default"
+  ),
+  recommendationItem(
+   "На что обратить внимание",
+   "Если вы обнаружили тлю, осмотрите несколько растений и оцените, насколько широко она распространилась. Обратите внимание, много ли тли на листьях и молодых побегах и есть ли заметные повреждения. Не спешите с обработкой при единичных насекомых: божьи коровки и некоторые другие полезные насекомые питаются тлёй и могут сдерживать её численность."
+  ),
+  recommendationItem(
+   "Важно",
+   "Удаляйте крестоцветные сорняки — например, пастушью сумку: на них тля может сохраняться и размножаться рядом с посадками.",
+   "note"
+  ),
+ ].join("")
+}
+
+function coloradoBeetleRecommendations(result){
+ const higherRisk=["ELEVATED","HIGH"].includes(result.risk_level);
+
+ return [
+  recommendationItem(
+   "Что делать сейчас",
+   higherRisk
+    ?"Почва прогрелась до температуры, при которой перезимовавшие колорадские жуки могут начинать выходить на поверхность. Усильте осмотр посадок."
+    :"Почва пока менее благоприятна для начала выхода перезимовавших колорадских жуков. Продолжайте периодически осматривать посадки.",
+   higherRisk?"attention":"default"
+  ),
+  recommendationItem(
+   "На что обратить внимание",
+   "Осматривайте картофель и другие паслёновые культуры — например, томаты и баклажаны — на наличие взрослых жуков, кладок яиц и молодых личинок."
+  ),
+  recommendationItem(
+   "Важно",
+   "Удаляйте рядом с посадками картофеля паслёновые сорняки, например чёрный паслён. По возможности не выращивайте картофель несколько лет подряд на одном и том же месте — чередуйте его с другими культурами.",
+   "note"
+  ),
+ ].join("")
+}
+
+function codlingMothRecommendations(result){
+ const higherRisk=["ELEVATED","HIGH"].includes(result.risk_level);
+
+ return [
+  recommendationItem(
+   "Что делать сейчас",
+   higherRisk
+    ?"Накопленного тепла достаточно для периода возможной сезонной активности яблонной плодожорки. Осматривайте яблони и плоды, а для более точного определения фазы активности используйте феромонные ловушки."
+    :"Температурный показатель пока ниже рабочего порога PestWatch для периода возможной сезонной активности яблонной плодожорки. Продолжайте периодически осматривать деревья и плоды.",
+   higherRisk?"attention":"default"
+  ),
+  recommendationItem(
+   "На что обратить внимание",
+   "Обращайте внимание на повреждения плодов и результаты феромонных ловушек. Они помогают понять, наблюдается ли фактическая активность вредителя."
+  ),
+  recommendationItem(
+   "Важно",
+   "Температурная оценка PestWatch не подтверждает фактический лёт плодожорки. Для более точного определения начала лёта используют феромонные ловушки.",
+   "note"
+  ),
+ ].join("")
+}
+
+function recommendationsHtml(result){
+ if(!result){
+  return `<p class="details-modal__placeholder">Рекомендации недоступны.</p>`
+ }
+
+ if(result.status==="ERROR"){
+  return `<p class="details-modal__placeholder">Рекомендации не сформированы, потому что оценка не была завершена из-за недоступности необходимых данных.</p>`
+ }
+
+ if(result.status==="INSUFFICIENT_DATA"){
+  return `<p class="details-modal__placeholder">Для уверенных рекомендаций пока недостаточно данных. Продолжайте обычное наблюдение за возможной угрозой.</p>`
+ }
+
+ if(result.threat_code==="TICK")return tickRecommendations(result);
+ if(result.threat_code==="CABBAGE_APHID")return cabbageAphidRecommendations(result);
+ if(result.threat_code==="COLORADO_BEETLE")return coloradoBeetleRecommendations(result);
+ if(result.threat_code==="CODLING_MOTH")return codlingMothRecommendations(result);
+
+ return `<p class="details-modal__placeholder">Рекомендации для этой угрозы пока недоступны.</p>`
+}
+
+function bindRecommendations(result){
+ if(!riskDetailsRecommendations)return;
+ riskDetailsRecommendations.innerHTML=recommendationsHtml(result)
+}
+
+
+
+
+// =====================================================================
+// SLICE 3.4C-B — SOURCES UI
+// Static source registry for the user-facing evidence behind calculations,
+// methodology and recommendations. No runtime network request is made.
+// =====================================================================
+
+const sourcePurposeLabels={
+ CALCULATION:"Для расчёта",
+ METHODOLOGY:"Методика расчёта",
+ RECOMMENDATION:"Для рекомендаций",
+};
+
+const riskSourceRegistry={
+ TICK:[
+  {
+   title:"Ixodes ricinus и влажность воздуха",
+   organization:"Научная публикация",
+   purpose:"CALCULATION",
+   description:"Подтверждает влияние дефицита насыщения воздуха влагой на активность клещей и ориентир менее 5 мм рт. ст.",
+   url:"https://pmc.ncbi.nlm.nih.gov/articles/PMC4311481/",
+  },
+  {
+   title:"Профилактика инфекций, передающихся с укусами клещей",
+   organization:"Роспотребнадзор",
+   purpose:"RECOMMENDATION",
+   description:"Подтверждает практические меры защиты: светлую закрытую одежду, регулярные осмотры и специальные средства защиты от клещей.",
+   url:"https://urpngt.rospotrebnadzor.ru/osnovnie-napravlenija/sanitarnyjj-nadzor/5356-2020-05-08-13-49-05.html",
+  },
+ ],
+ CABBAGE_APHID:[
+  {
+   title:"Влияние температуры на капустную тлю Brevicoryne brassicae",
+   organization:"Научная публикация",
+   purpose:"CALCULATION",
+   description:"Подтверждает диапазон 15–25 °C как благоприятный для увеличения популяции капустной тли.",
+   url:"https://pmc.ncbi.nlm.nih.gov/articles/PMC6303750/",
+  },
+  {
+   title:"Cabbage Aphid — Cole Crops",
+   organization:"University of California IPM",
+   purpose:"RECOMMENDATION",
+   description:"Подтверждает рекомендации по осмотру растений, сохранению естественных врагов тли и удалению крестоцветных растений рядом с посадками.",
+   url:"https://ipm.ucanr.edu/agriculture/cole-crops/cabbage-aphid/",
+  },
+ ],
+ COLORADO_BEETLE:[
+  {
+   title:"Pest categorisation of Leptinotarsa decemlineata",
+   organization:"Европейское агентство по безопасности пищевых продуктов",
+   purpose:"CALCULATION",
+   description:"Подтверждает ориентир температуры почвы 11 °C для начала выхода перезимовавших взрослых колорадских жуков.",
+   url:"https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2020.6359",
+  },
+  {
+   title:"Colorado potato beetle",
+   organization:"University of Minnesota Extension",
+   purpose:"RECOMMENDATION",
+   description:"Подтверждает рекомендации по осмотру посадок, работе с яйцами и личинками, паслёновыми сорняками и чередованию места выращивания картофеля.",
+   url:"https://extension.umn.edu/yard-and-garden-insects/colorado-potato-beetle",
+  },
+ ],
+ CODLING_MOTH:[
+  {
+   title:"Codling Moth — Phenology Models",
+   organization:"University of California IPM",
+   purpose:"METHODOLOGY",
+   description:"Подтверждает применение температурных моделей и градусо-дней для оценки сезонного развития яблонной плодожорки. Не подтверждает конкретный порог PestWatch 130 градусо-дней.",
+   url:"https://ipm.ucanr.edu/weather/phenology-models-description/codling-moth/",
+  },
+  {
+   title:"Codling Moth — Apple",
+   organization:"University of California IPM",
+   purpose:"RECOMMENDATION",
+   description:"Подтверждает использование феромонных ловушек для наблюдения за фактической активностью плодожорки и определения точки отсчёта температурной модели.",
+   url:"https://ipm.ucanr.edu/agriculture/apple/codling-moth/",
+  },
+ ],
+};
+
+function sourceItem(source){
+ const purpose=sourcePurposeLabels[source.purpose]||source.purpose;
+
+ return `<article class="source-item"><div class="source-item__head"><div><span class="source-item__organization">${esc(source.organization)}</span><h4>${esc(source.title)}</h4></div><span class="source-purpose source-purpose--${esc(source.purpose.toLowerCase())}">${esc(purpose)}</span></div><p>${esc(source.description)}</p><a class="source-link" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">Открыть источник ↗</a></article>`
+}
+
+function sourcesHtml(result){
+ if(!result){
+  return `<p class="details-modal__placeholder">Источники недоступны.</p>`
+ }
+
+ const sources=riskSourceRegistry[result.threat_code]||[];
+
+ if(!sources.length){
+  return `<p class="details-modal__placeholder">Источники для этой угрозы пока недоступны.</p>`
+ }
+
+ return sources.map(sourceItem).join("")
+}
+
+function bindSources(result){
+ if(!riskDetailsSources)return;
+ riskDetailsSources.innerHTML=sourcesHtml(result)
+}
+
+
+
+
+// =====================================================================
+// SLICE 3.5 — RESULT MEANING
+// Explains what the persisted RiskLevel means for the selected threat.
+// It does not infer pest presence and does not recalculate risk.
+// =====================================================================
+
+function resultMeaningBlock(text,note){
+ return `<div class="result-meaning__summary"><p>${esc(text)}</p></div><div class="result-meaning__note"><strong>Важно</strong><p>${esc(note)}</p></div>`
+}
+
+function isHigherRisk(result){
+ return ["ELEVATED","HIGH"].includes(result?.risk_level)
+}
+
+function tickResultMeaning(result){
+ if(isHigherRisk(result)){
+  return resultMeaningBlock(
+   "Погодные условия сейчас благоприятны для потенциальной активности клещей. Температура и влажность позволяют им дольше оставаться активными.",
+   "Высокая оценка риска означает благоприятные погодные условия, а не подтверждённое наличие клещей в конкретном месте."
+  )
+ }
+
+ return resultMeaningBlock(
+  "Текущая погода менее благоприятна для активности клещей. Это может снижать вероятность их активного поведения, но не означает, что клещей рядом нет.",
+  "PestWatch оценивает погодные условия, а не фактическое количество клещей на территории."
+ )
+}
+
+function cabbageAphidResultMeaning(result){
+ if(isHigherRisk(result)){
+  return resultMeaningBlock(
+   "Температура сейчас находится в диапазоне, благоприятном для развития капустной тли. При наличии тли на растениях такие условия могут способствовать увеличению её численности.",
+   "PestWatch не определяет, есть ли тля на конкретных растениях. Это можно установить только при осмотре посадок."
+  )
+ }
+
+ return resultMeaningBlock(
+  "Температура сейчас менее благоприятна для быстрого развития капустной тли. Это может замедлять увеличение её численности, но не означает отсутствия тли на растениях.",
+  "PestWatch оценивает температурные условия для развития тли, а её фактическое наличие определяется осмотром посадок."
+ )
+}
+
+function coloradoBeetleResultMeaning(result){
+ if(isHigherRisk(result)){
+  return resultMeaningBlock(
+   "Температура почвы достигла уровня, при котором перезимовавшие колорадские жуки могут начинать выходить на поверхность.",
+   "Оценка показывает подходящие температурные условия, но не подтверждает, что жуки уже появились на ваших посадках."
+  )
+ }
+
+ return resultMeaningBlock(
+  "Температура почвы пока ниже уровня, при котором обычно начинается выход перезимовавших колорадских жуков.",
+  "Низкая оценка риска не означает полного отсутствия вредителя — фактическое наличие определяется осмотром растений."
+ )
+}
+
+function codlingMothResultMeaning(result){
+ if(isHigherRisk(result)){
+  return resultMeaningBlock(
+   "Накопленного с начала температурного сезона тепла достаточно для периода возможной сезонной активности яблонной плодожорки.",
+   "Это температурный индикатор PestWatch. Он не подтверждает фактический лёт плодожорки."
+  )
+ }
+
+ return resultMeaningBlock(
+  "Накопленного тепла пока недостаточно для достижения рабочего температурного порога PestWatch, связанного с периодом возможной сезонной активности яблонной плодожорки.",
+  "Температурная оценка сама по себе не определяет наличие вредителя или фактическое начало лёта."
+ )
+}
+
+function resultMeaningHtml(result){
+ if(!result){
+  return `<p class="details-modal__placeholder">Объяснение результата недоступно.</p>`
+ }
+
+ if(result.status==="ERROR"){
+  return `<p class="details-modal__placeholder">Результат не был рассчитан из-за недоступности необходимых данных.</p>`
+ }
+
+ if(result.status==="INSUFFICIENT_DATA"){
+  return resultMeaningBlock(
+   "Для этой угрозы пока недостаточно данных, чтобы определить уровень риска.",
+   "Недостаток данных не означает отсутствия угрозы. PestWatch не делает вывод о риске без необходимых наблюдений."
+  )
+ }
+
+ if(result.threat_code==="TICK")return tickResultMeaning(result);
+ if(result.threat_code==="CABBAGE_APHID")return cabbageAphidResultMeaning(result);
+ if(result.threat_code==="COLORADO_BEETLE")return coloradoBeetleResultMeaning(result);
+ if(result.threat_code==="CODLING_MOTH")return codlingMothResultMeaning(result);
+
+ return `<p class="details-modal__placeholder">Объяснение для этой угрозы пока недоступно.</p>`
+}
+
+function bindResultMeaning(result){
+ if(!riskDetailsMeaning)return;
+ riskDetailsMeaning.innerHTML=resultMeaningHtml(result)
+}
+
+
+
+
+// =====================================================================
+// SLICE 3.6 — INPUT DATA SUMMARY
+// Shows which persisted observations were used for the selected threat.
+// Presentation only: no extra request and no recalculation.
+// =====================================================================
+
+function inputDataRow(label,value,note=null){
+ return `<div class="input-data-row"><span class="input-data-row__label">${esc(label)}</span><strong class="input-data-row__value">${esc(value)}</strong>${note?`<span class="input-data-row__note">${esc(note)}</span>`:""}</div>`
+}
+
+function inputDataBlock(title,rows,note=null){
+ return `<div class="input-data-block"><h4>${esc(title)}</h4><div class="input-data-block__rows">${rows.join("")}</div>${note?`<p class="input-data-block__note">${esc(note)}</p>`:""}</div>`
+}
+
+function observedAtLabel(value){
+ if(!value)return"Нет данных";
+ const datePart=String(value).slice(0,10);
+ const time=observationTime(value);
+ return time?`${dateRu(datePart)}, ${time}`:dateRu(datePart)
+}
+
+function tickInputDataSummary(assessment){
+ const w=weather(assessment);
+ return [inputDataBlock("Текущие погодные наблюдения",[
+  inputDataRow("Температура воздуха",w?.temperature==null?"Нет данных":`${temperatureValue(w.temperature)} °C`),
+  inputDataRow("Относительная влажность",w?.humidity==null?"Нет данных":`${oneDecimal(w.humidity)} %`),
+  inputDataRow("Время наблюдения",observedAtLabel(w?.observed_at)),
+ ],"Эти погодные данные используются для оценки температурных и влажностных условий активности клещей.")].join("")
+}
+
+function cabbageAphidInputDataSummary(assessment){
+ const w=weather(assessment);
+ return [inputDataBlock("Текущие погодные наблюдения",[
+  inputDataRow("Температура воздуха",w?.temperature==null?"Нет данных":`${temperatureValue(w.temperature)} °C`,"Используется в оценке"),
+  inputDataRow("Относительная влажность",w?.humidity==null?"Нет данных":`${oneDecimal(w.humidity)} %`,"Показывается справочно"),
+  inputDataRow("Время наблюдения",observedAtLabel(w?.observed_at)),
+ ],"В текущей оценке капустной тли уровень риска определяется температурой воздуха. Влажность отображается как дополнительная информация.")].join("")
+}
+
+function coloradoBeetleInputDataSummary(assessment){
+ const estimate=assessment?.input_snapshot?.soil_temperature_10cm_estimate;
+ const sourceDepths=estimate?.source_depths_cm||[];
+ const sourceTemperatures=estimate?.source_temperatures||[];
+ const w=weather(assessment);
+ const rows=sourceDepths.map((depth,index)=>inputDataRow(`Температура почвы на глубине ${oneDecimal(depth)} см`,sourceTemperatures[index]==null?"Нет данных":`${temperatureValue(sourceTemperatures[index])} °C`));
+ if(!rows.length)rows.push(inputDataRow("Исходные температуры почвы","Нет данных"));
+ rows.push(inputDataRow("Время погодного наблюдения",observedAtLabel(w?.observed_at)));
+ return [inputDataBlock("Исходные данные о почве",rows,"По этим наблюдениям PestWatch рассчитывает температуру почвы на глубине 10 см. Сам расчёт показан в разделе «Как рассчитано».")].join("")
+}
+
+function codlingMothInputDataSummary(assessment){
+ const degreeDays=assessment?.input_snapshot?.degree_days_10c;
+ const observations=degreeDays?.observations||[];
+ const known=observations.filter(observation=>observation?.mean_temperature!==null&&observation?.mean_temperature!==undefined).length;
+ return [inputDataBlock("Исторические температурные наблюдения",[
+  inputDataRow("Период",degreeDays?.period_start&&degreeDays?.period_end?`${dateRu(degreeDays.period_start)} — ${dateRu(degreeDays.period_end)}`:"Нет данных"),
+  inputDataRow("Наблюдений с температурой",observations.length?`${known} из ${observations.length}`:"Нет данных"),
+  inputDataRow("Начало температурного сезона",assessment?.historical_start_date?dateRu(assessment.historical_start_date):"Не определено"),
+ ],"Используются среднесуточные температуры текущего года. Из них определяется начало температурного сезона и накапливается сумма эффективных температур.")].join("")
+}
+
+function inputDataSummaryHtml(result,assessment){
+ if(!result||!assessment)return `<p class="details-modal__placeholder">Исходные данные недоступны.</p>`;
+ if(result.threat_code==="TICK")return tickInputDataSummary(assessment);
+ if(result.threat_code==="CABBAGE_APHID")return cabbageAphidInputDataSummary(assessment);
+ if(result.threat_code==="COLORADO_BEETLE")return coloradoBeetleInputDataSummary(assessment);
+ if(result.threat_code==="CODLING_MOTH")return codlingMothInputDataSummary(assessment);
+ return `<p class="details-modal__placeholder">Исходные данные для этой угрозы пока недоступны.</p>`
+}
+
+function bindInputDataSummary(result){
+ if(!riskDetailsInputs)return;
+ riskDetailsInputs.innerHTML=inputDataSummaryHtml(result,currentAssessment)
+}
+
+
 container.addEventListener("click",event=>{
  const trigger=event.target.closest(".risk-details-trigger");
  if(!trigger)return;
@@ -250,6 +687,10 @@ container.addEventListener("click",event=>{
  if(!result)return;
 
  bindRiskDetailsIdentity(result);
+ bindResultMeaning(result);
+ bindRecommendations(result);
  bindCalculationDetails(result);
+ bindInputDataSummary(result);
+ bindSources(result);
  openRiskDetailsModal(trigger)
 });
