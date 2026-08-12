@@ -141,7 +141,12 @@ def _serialize_summary(summary: AssessmentSummary) -> dict:
         "created_at": summary.created_at.isoformat(),
         "assessment_date": summary.assessment_date.isoformat(),
         "profile": summary.profile.value,
-        "location": _serialize_location(summary.location),
+        "location": {
+            "name": summary.location.name,
+            "region": summary.location.region,
+            "country": summary.location.country,
+        },
+        "source": summary.source.value,
     }
 
 
@@ -151,7 +156,10 @@ def _serialize_assessment(assessment: Assessment) -> dict:
         "created_at": assessment.created_at.isoformat(),
         "assessment_date": assessment.assessment_date.isoformat(),
         "profile": assessment.profile.value,
-        "location": _serialize_location(assessment.location),
+        "location": _serialize_location(
+            assessment.location
+        ),
+        "source": assessment.source.value,
         "historical_start_date": (
             assessment.historical_start_date.isoformat()
             if assessment.historical_start_date is not None

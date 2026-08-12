@@ -17,9 +17,10 @@ def create_app(config_class=Config):
     from app import models  # noqa: F401
     from app.bootstrap import build_assessment_services
     from app.controllers import (
-        create_assessment_api,
-        threat_api,
-        threat_web,
+    create_assessment_api,
+    create_assessment_history_web,
+    threat_api,
+    threat_web,
     )
     from app.seed.threat_catalog import seed_threat_catalog
 
@@ -31,6 +32,13 @@ def create_app(config_class=Config):
 
     app.register_blueprint(threat_api)
     app.register_blueprint(threat_web)
+    app.register_blueprint(
+    create_assessment_history_web(
+        history_service=(
+            assessment_history_service
+            ),
+        )
+    )
     app.register_blueprint(
         create_assessment_api(
             execution_service=(
