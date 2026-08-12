@@ -17,6 +17,7 @@ from app.domain import (
     SoilTemperatureEstimateMethod,
     UserProfile,
     WeatherData,
+    AssessmentSource,
 )
 from app.domain.assessment_summary import AssessmentSummary
 from app.models import (
@@ -83,6 +84,7 @@ class AssessmentRepository:
                 assessment.assessment_date
             ),
             profile=assessment.profile.value,
+            source=assessment.source.value,
             location_name=assessment.location.name,
             location_region=assessment.location.region,
             location_country=(
@@ -308,41 +310,47 @@ class AssessmentRepository:
                 latitude=model.location_latitude,
                 longitude=model.location_longitude,
             ),
+            source=AssessmentSource(
+                model.source
+            ),
         )
 
     def _to_domain(
         self,
         model: AssessmentModel,
     ) -> Assessment:
-        return Assessment(
-            id=model.id,
-            created_at=model.created_at,
-            assessment_date=model.assessment_date,
-            profile=UserProfile(
-                model.profile
-            ),
-            location=Location(
-                name=model.location_name,
-                region=model.location_region,
-                country=model.location_country,
-                latitude=model.location_latitude,
-                longitude=model.location_longitude,
-            ),
-            historical_start_date=(
-                model.historical_start_date
-            ),
-            input_snapshot=(
-                self._snapshot_to_domain(
-                    model.input_snapshot
-                )
-            ),
-            risk_results=tuple(
-                self._risk_result_to_domain(
-                    result
-                )
-                for result in model.risk_results
-            ),
-        )
+            return Assessment(
+                id=model.id,
+                created_at=model.created_at,
+                assessment_date=model.assessment_date,
+                profile=UserProfile(
+                    model.profile
+                ),
+                location=Location(
+                    name=model.location_name,
+                    region=model.location_region,
+                    country=model.location_country,
+                    latitude=model.location_latitude,
+                    longitude=model.location_longitude,
+                ),
+                historical_start_date=(
+                    model.historical_start_date
+                ),
+                input_snapshot=(
+                    self._snapshot_to_domain(
+                        model.input_snapshot
+                    )
+                ),
+                risk_results=tuple(
+                    self._risk_result_to_domain(
+                        result
+                    )
+                    for result in model.risk_results
+                ),
+                source=AssessmentSource(
+                    model.source
+                ),
+            )
 
     @staticmethod
     def _snapshot_to_domain(

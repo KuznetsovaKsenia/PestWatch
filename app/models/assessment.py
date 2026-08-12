@@ -26,6 +26,14 @@ class AssessmentModel(db.Model):
         index=True,
     )
 
+    source = db.Column(
+        db.String(20),
+        nullable=False,
+        default="REAL",
+        server_default="REAL",
+        index=True,
+    )
+
     location_name = db.Column(
         db.String(255),
         nullable=False,
@@ -57,15 +65,15 @@ class AssessmentModel(db.Model):
     )
 
     risk_results = db.relationship(
-    "RiskResultModel",
-    back_populates="assessment",
-    cascade="all, delete-orphan",
-    order_by="RiskResultModel.id",
+        "RiskResultModel",
+        back_populates="assessment",
+        cascade="all, delete-orphan",
+        order_by="RiskResultModel.id",
     )
 
     input_snapshot = db.relationship(
-    "AssessmentInputSnapshotModel",
-    back_populates="assessment",
-    cascade="all, delete-orphan",
-    uselist=False,
+        "AssessmentInputSnapshotModel",
+        back_populates="assessment",
+        cascade="all, delete-orphan",
+        uselist=False,
     )
