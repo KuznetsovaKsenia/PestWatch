@@ -1,4 +1,4 @@
-# PestWatch
+# ![logo](/static/images/pestwatch-48x48.png) PestWatch
 
 [![Tests](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml/badge.svg)](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
