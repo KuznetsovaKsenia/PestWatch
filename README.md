@@ -1,5 +1,14 @@
 # PestWatch
 
+[![Tests](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml/badge.svg)](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml)
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black)
+![SQLite](https://img.shields.io/badge/SQLite-Database-07405E)
+![Open-Meteo](https://img.shields.io/badge/Open--Meteo-Weather%20API-4c9be8)
+![pytest](https://img.shields.io/badge/tested%20with-pytest-0A9EDC)
+![Playwright](https://img.shields.io/badge/E2E-Playwright-2EAD33)
+
+
 ### Мы начали не с приложения, а с исследования сезонных биологических угроз Центральной России. Выяснили, что официальные службы публикуют качественные данные, а активность разных вредителей связана с различными измеримыми факторами. Одновременно выяснилось, что по одной погоде нельзя достоверно предсказывать появление вредителя. Поэтому мы отказались от идеи прогнозатора и разработали систему оценки сезонного риска. Она получает текущую погоду, применяет отдельные правила для каждого вида и объясняет пользователю, почему риск сейчас повышен и какие профилактические действия рекомендованы
 
 ---
