@@ -1,6 +1,6 @@
 # ![logo](app/static/images/pestwatch-48x48.png) PestWatch
 
-[![Tests](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml/badge.svg)](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml)
+[![Tests](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/tests.yml/badge.svg)](https://github.com/KuznetsovaKsenia/PestWatch/actions/workflows/test.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black)
 ![SQLite](https://img.shields.io/badge/SQLite-Database-07405E)
