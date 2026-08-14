@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+
+{% block title %}
+Результат оценки — PestWatch
+{% endblock %}
+
+{% block content %}
+
+{% set profile_names = {
+    "HUMAN": "Человек",
+    "VEGETABLE_GARDEN": "Огород",
+    "GARDEN": "Сад"
+} %}
+
+{% set threat_names = {
+    "TICK": "Иксодовые клещи",
+    "CABBAGE_APHID": "Капустная тля",
+    "COLORADO_BEETLE": "Колорадский жук",
+    "CODLING_MOTH": "Яблонная плодожорка"
+} %}
+
+{% set risk_level_names = {
+    "LOW": "НИЗКИЙ РИСК",
+    "MODERATE": "УМЕРЕННЫЙ РИСК",
+    "ELEVATED": "ПОВЫШЕННЫЙ РИСК",
+    "HIGH": "ВЫСОКИЙ РИСК"
+} %}
+
+{% set status_names = {
+    "CALCULATED": "Оценка выполнена",
+    "INSUFFICIENT_DATA": "Недостаточно данных",
+    "ERROR": "Ошибка оценки"
+} %}
+
+{% set factor_names = {
+    "AIR_TEMPERATURE": "Температура воздуха",
+    "SATURATION_DEFICIT": "Дефицит влажности воздуха",
+    "RELATIVE_HUMIDITY": "Относительная влажность",
+    "SOIL_TEMPERATURE_10CM": "Температура почвы на глубине 10 см",
+    "DEGREE_DAYS_ABOVE_10C": "Сумма эффективных температур"
+} %}
+
+{% set factor_state_names = {
+    "MATCHED": "Условие выполнено",
+    "NOT_MATCHED": "Условие не выполнено",
+    "MISSING": "Недостаточно данных"
+} %}
+
+{% set soil_method_names = {
+    "LINEAR_INTERPOLATION": "Линейная интерполяция"
+} %}
+
+{% set degree_days_method_names = {
+    "DAILY_MEAN_ABOVE_BASE": "По среднесуточной температуре выше базовой"
+} %}
+
+<section class="history-detail">
+    <div class="history-detail__back">
+        <a
+            href="{{
+                url_for(
+                    'assessment_history_web.get_assessment_history'
+                )
+            }}"
+        >
+            ← К истории
+        </a>
+    </div>
+
+    <header class="history-detail__header">
+        <div>
+            <p class="eyebrow">
+                Сохранённая оценка
+            </p>
+
+            <div class="history-detail__title">
+                <h1>
+                    {{ assessment.location.name }}
+                </h1>
+
+                {% if assessment.source.value == "DEMO" %}
+                    <span
+                        class="history-source history-source--demo"
+                    >
+                        Демо
+                    </span>
+                {% else %}
+                    <span
+                        class="history-source history-source--real"
+                    >
+                        Обычная оценка
+                    </span>
+                {% endif %}
+            </div>
+
+            <p class="history-detail__location">
+                {{ assessment.location.region }},
+                {{ assessment.location.country }}
+            </p>
+        </div>
+
+        <dl class="history-detail__meta">
+            <div>
+                <dt>Профиль</dt>
+                <dd>
+                    {{
+                        profile_names.get(
+                            assessment.profile.value,
+                            assessment.profile.value
+                        )
+                    }}
+                </dd>
+            </div>
+
+            <div>
+                <dt>Дата оценки</dt>
+                <dd>
+                    {{
+                        assessment.assessment_date
+                        .strftime("%d.%m.%Y")
+                    }}
+                </dd>
+            </div>
+
+            <div>
+                <dt>Выполнено</dt>
+                <dd>
+                    {{
+                        assessment.created_at
+                        .strftime("%d.%m.%Y %H:%M")
+                    }}
+                </dd>
+            </div>
+        </dl>
+    </header>
+
+    <section class="history-detail__results">
+        <div class="section-heading">
+            <p class="eyebrow">
+                Результаты
+            </p>
+
+            <h2>
+                Оценка риска
+            </h2>
+
+            <p>
+                Показаны результат и факторы, сохранённые
+                в момент выполнения оценки.
+            </p>
+        </div>
+
+        <div class="history-risk-list">
+            {% for result in assessment.risk_results %}
+                <article class="history-risk-card">
+                    <div class="history-risk-card__head">
+                        <div>
+                            <h3>
+                                {{
+                                    threat_names.get(
+                                        result.threat_code,
+                                        result.threat_code
+                                    )
+                                }}
+                            </h3>
+
+                            <span class="history-risk-card__status">
+                                {{
+                                    status_names.get(
+                                        result.status.value,
+                                        result.status.value
+                                    )
+                                }}
+                            </span>
+                        </div>
+
+                        {% if result.risk_level %}
+                            <span
+                                class="
+                                    risk-level
+                                    risk-level--{{ result.risk_level.value|lower }}
+                                "
+                            >
+                                {{
+                                    risk_level_names.get(
+                                        result.risk_level.value,
+                                        result.risk_level.value
+                                    )
+                                }}
+                            </span>
+                        {% else %}
+                            <span
+                                class="risk-level risk-level--unknown"
+                            >
+                                РИСК НЕ ОПРЕДЕЛЁН
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if result.explanation %}
+                        <p class="history-risk-card__explanation">
+                            {{ result.explanation }}
+                        </p>
+                    {% endif %}
+
+                    {% if result.factors %}
+                        <div class="history-evidence">
+                            <h4>
+                                Факторы оценки
+                            </h4>
+
+                            <div class="history-factor-list">
+                                {% for factor in result.factors %}
+                                    <div
+                                        class="
+                                            history-factor
+                                            history-factor--{{ factor.state.value|lower }}
+                                        "
+                                    >
+                                        <div class="history-factor__head">
+                                            <strong>
+                                                {{
+                                                    factor_names.get(
+                                                        factor.factor,
+                                                        factor.factor
+                                                    )
+                                                }}
+                                            </strong>
+
+                                            <span>
+                                                {{
+                                                    factor_state_names.get(
+                                                        factor.state.value,
+                                                        factor.state.value
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+
+                                        <dl class="history-factor__values">
+                                            <div>
+                                                <dt>
+                                                    Сохранённое значение
+                                                </dt>
+                                                <dd>
+                                                    {{ format_factor_value(factor) }}
+                                                </dd>
+                                            </div>
+
+                                            {% if factor.expected %}
+                                                <div>
+                                                    <dt>
+                                                        Условие
+                                                    </dt>
+                                                    <dd>
+                                                        {{ format_expected(factor.expected) }}
+                                                    </dd>
+                                                </div>
+                                            {% endif %}
+                                        </dl>
+
+                                        {% if factor.explanation %}
+                                            <p>
+                                                {{ factor.explanation }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% set snapshot = assessment.input_snapshot %}
+    {% set weather = snapshot.current_weather %}
+    {% set soil = snapshot.soil_temperature_10cm_estimate %}
+    {% set degree_days = snapshot.degree_days_10c %}
+
+    <section class="history-snapshot">
+        <div class="section-heading">
+            <p class="eyebrow">
+                Исходные данные
+            </p>
+
+            <h2>
+                Сохранённый снимок данных
+            </h2>
+
+            <p>
+                Это данные, использованные при выполнении
+                сохранённой оценки.
+            </p>
+        </div>
+
+        <div class="history-snapshot__grid">
+
+            {% if weather %}
+                <article class="history-evidence-card">
+                    <h3>
+                        Погодные наблюдения
+                    </h3>
+
+                    <dl class="history-data-list">
+                        <div>
+                            <dt>Температура воздуха</dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        weather.temperature,
+                                        "°C"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Относительная влажность</dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        weather.humidity,
+                                        "%"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Осадки</dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        weather.precipitation,
+                                        "мм"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Скорость ветра</dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        weather.wind_speed,
+                                        "м/с"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+                </article>
+            {% endif %}
+
+            {% if snapshot.saturation_deficit_mm_hg is not none %}
+                <article class="history-evidence-card">
+                    <h3>
+                        Влажностный показатель
+                    </h3>
+
+                    <dl class="history-data-list">
+                        <div>
+                            <dt>
+                                Дефицит влажности воздуха
+                            </dt>
+                            <dd>
+                               {{
+                                    format_measurement(
+                                        snapshot.saturation_deficit_mm_hg,
+                                        "мм рт. ст."
+                                    )
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <p class="history-evidence-card__note">
+                        Сохранённое значение, использованное
+                        при оценке условий активности клещей.
+                    </p>
+                </article>
+            {% endif %}
+
+            {% if soil %}
+                <article class="history-evidence-card">
+                    <h3>
+                        Температура почвы
+                    </h3>
+
+                    <dl class="history-data-list">
+                        <div>
+                            <dt>
+                                Расчётная глубина
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        soil.depth_cm,
+                                        "см"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Температура на этой глубине
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        soil.temperature,
+                                        "°C"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Исходная температура
+                                на глубине
+                                {{ format_number(soil.source_depths_cm[0]) }} см
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        soil.source_temperatures[0],
+                                        "°C"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Исходная температура
+                                на глубине
+                                {{ format_number(soil.source_depths_cm[1]) }} см
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        soil.source_temperatures[1],
+                                        "°C"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Метод
+                            </dt>
+                            <dd>
+                                {{
+                                    soil_method_names.get(
+                                        soil.method.value,
+                                        soil.method.value
+                                    )
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+                </article>
+            {% endif %}
+
+            {% if degree_days %}
+                <article class="history-evidence-card">
+                    <h3>
+                        Температурный сезон
+                    </h3>
+
+                    <dl class="history-data-list">
+                        <div>
+                            <dt>
+                                Период наблюдений
+                            </dt>
+                            <dd>
+                                {{
+                                    degree_days.period_start
+                                    .strftime("%d.%m.%Y")
+                                }}
+                                —
+                                {{
+                                    degree_days.period_end
+                                    .strftime("%d.%m.%Y")
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Базовая температура
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        degree_days.base_temperature,
+                                        "°C"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Накопленная сумма
+                            </dt>
+                            <dd>
+                                {{
+                                    format_measurement(
+                                        degree_days.total,
+                                        "градусо-дней"
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Сохранено наблюдений
+                            </dt>
+                            <dd>
+                                {{ degree_days.observations|length }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                Метод
+                            </dt>
+                            <dd>
+                                {{
+                                    degree_days_method_names.get(
+                                        degree_days.method.value,
+                                        degree_days.method.value
+                                    )
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+                </article>
+            {% endif %}
+
+            {% if assessment.historical_start_date %}
+                <article class="history-evidence-card">
+                    <h3>
+                        Начало температурного сезона
+                    </h3>
+
+                    <dl class="history-data-list">
+                        <div>
+                            <dt>
+                                Определённая дата
+                            </dt>
+                            <dd>
+                                {{
+                                    assessment.historical_start_date
+                                    .strftime("%d.%m.%Y")
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+                </article>
+            {% endif %}
+
+        </div>
+    </section>
+
+    <div class="history-detail__note">
+        <strong>
+            Исторический результат
+        </strong>
+
+        <p>
+            Эта страница показывает сохранённую оценку.
+            PestWatch не выполняет повторный расчёт
+            и не получает новые погодные данные.
+        </p>
+    </div>
+</section>
+{% endblock %}

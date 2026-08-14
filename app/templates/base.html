@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>{% block title %}PestWatch{% endblock %}</title>
 
@@ -35,7 +38,22 @@
 
                 <a
                     class="main-nav__link"
-                    href="{{ url_for('threat_web.get_threat_catalog') }}"
+                    href="{{
+                        url_for(
+                            'assessment_history_web.get_assessment_history'
+                        )
+                    }}"
+                >
+                    История
+                </a>
+
+                <a
+                    class="main-nav__link"
+                    href="{{
+                        url_for(
+                            'threat_web.get_threat_catalog'
+                        )
+                    }}"
                 >
                     Каталог угроз
                 </a>
@@ -46,5 +64,39 @@
     <main class="page">
         {% block content %}{% endblock %}
     </main>
+    <script>
+(function () {
+    const DEMO_MODE_STORAGE_KEY =
+        "pestwatch.demoMode";
+
+    function isDemoMode() {
+        return (
+            window.sessionStorage.getItem(
+                DEMO_MODE_STORAGE_KEY
+            ) === "true"
+        );
+    }
+
+    const assessmentLinks =
+        document.querySelectorAll(
+            'a[href="/"]'
+        );
+
+    assessmentLinks.forEach(function (link) {
+        link.addEventListener(
+            "click",
+            function (event) {
+                if (!isDemoMode()) {
+                    return;
+                }
+
+                event.preventDefault();
+                window.location.href =
+                    "/?demo=1";
+            }
+        );
+    });
+})();
+</script>
 </body>
 </html>

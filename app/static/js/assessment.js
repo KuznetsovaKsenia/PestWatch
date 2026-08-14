@@ -11,7 +11,8 @@ const demoModeExit=document.getElementById("demo-mode-exit");
 // =====================================================================
 // EPIC 13 / SLICE 13.7 — DEMO MODE UI CONTRACT
 //
-// Demo mode is activated only by ?demo=1.
+// Demo mode is entered through ?demo=1 and then
+// preserved in sessionStorage during navigation.
 // The public form remains visually almost identical:
 // - city becomes a fixed select;
 // - region and country are filled automatically;
@@ -28,9 +29,34 @@ const demoScenarios=[
  {scenarioId:"DEMO_G",name:"Томск",region:"Томская область",country:"Россия"},
 ];
 
-function isDemoMode(){
- return new URLSearchParams(window.location.search).get("demo")==="1"
+const DEMO_MODE_STORAGE_KEY="pestwatch.demoMode";
+
+function activateDemoModeFromUrl(){
+ const requested=new URLSearchParams(
+  window.location.search
+ ).get("demo")==="1";
+
+ if(requested){
+  window.sessionStorage.setItem(
+   DEMO_MODE_STORAGE_KEY,
+   "true"
+  )
+ }
 }
+
+function isDemoMode(){
+ return window.sessionStorage.getItem(
+  DEMO_MODE_STORAGE_KEY
+ )==="true"
+}
+
+function disableDemoMode(){
+ window.sessionStorage.removeItem(
+  DEMO_MODE_STORAGE_KEY
+ )
+}
+
+activateDemoModeFromUrl();
 
 function findDemoScenario(scenarioId){
  return demoScenarios.find(scenario=>scenario.scenarioId===scenarioId)||null
@@ -113,13 +139,9 @@ function configureDemoModeUi(){
 if(demoModeExit){
  demoModeExit.addEventListener("click",event=>{
   event.preventDefault();
-
-  window.localStorage.removeItem(
-   "pestwatch.demoMode"
-  );
-
+  disableDemoMode();
   window.location.href="/";
- });
+ })
 }
 
 const profiles={HUMAN:"Человек",VEGETABLE_GARDEN:"Огород",GARDEN:"Сад"};

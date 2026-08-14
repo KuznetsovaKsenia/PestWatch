@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}История оценок — PestWatch{% endblock %}
+
+{% block content %}
+<section class="history-page">
+    <div class="section-heading">
+        <p class="eyebrow">
+            История PestWatch
+        </p>
+
+        <h1>
+            Выполненные оценки
+        </h1>
+
+        <p>
+            Здесь сохраняются результаты ранее выполненных оценок риска.
+        </p>
+    </div>
+
+    {% set profile_names = {
+        "HUMAN": "Человек",
+        "VEGETABLE_GARDEN": "Огород",
+        "GARDEN": "Сад"
+    } %}
+
+    {% if assessments %}
+        <div class="history-list">
+            {% for assessment in assessments %}
+                <article class="history-card">
+                    <div class="history-card__main">
+                        <div class="history-card__heading">
+                            <h2>
+                                {{ assessment.location.name }}
+                            </h2>
+
+                            {% if assessment.source.value == "DEMO" %}
+                                <span
+                                    class="history-source history-source--demo"
+                                >
+                                    Демо
+                                </span>
+                            {% else %}
+                                <span
+                                    class="history-source history-source--real"
+                                >
+                                    Обычная оценка
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <p class="history-card__location">
+                            {{ assessment.location.region }},
+                            {{ assessment.location.country }}
+                        </p>
+                    </div>
+
+                    <dl class="history-card__meta">
+                        <div class="history-card__meta-item">
+                            <dt>Профиль</dt>
+
+                            <dd>
+                                {{
+                                    profile_names.get(
+                                        assessment.profile.value,
+                                        assessment.profile.value
+                                    )
+                                }}
+                            </dd>
+                        </div>
+
+                        <div class="history-card__meta-item">
+                            <dt>Дата оценки</dt>
+
+                            <dd>
+                                {{
+                                    assessment.assessment_date
+                                    .strftime("%d.%m.%Y")
+                                }}
+                            </dd>
+                        </div>
+
+                        <div class="history-card__meta-item">
+                            <dt>Выполнено</dt>
+
+                            <dd>
+                                {{
+                                    assessment.created_at
+                                    .strftime("%d.%m.%Y %H:%M")
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div class="history-card__actions">
+                        <a
+                            class="history-card__open"
+                            href="{{
+                                url_for(
+                                    'assessment_history_web.get_assessment_history_detail',
+                                    assessment_id=assessment.id
+                                )
+                            }}"
+                        >
+                            Открыть
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="history-empty card">
+            <h2>
+                История пока пуста
+            </h2>
+
+            <p>
+                После выполнения первой оценки её результат появится здесь.
+            </p>
+
+            <a
+                class="button button--primary history-empty__action"
+                href="{{ url_for('index') }}"
+            >
+                Выполнить оценку
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

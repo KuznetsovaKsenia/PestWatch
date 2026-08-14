@@ -406,27 +406,26 @@ def test_get_assessments_returns_history_summaries(
     assert response.status_code == 200
 
     assert body == {
-        "success": True,
-        "data": [
-            {
-                "id": 42,
-                "created_at": (
-                    "2026-08-11T16:00:00"
-                ),
-                "assessment_date": (
-                    "2026-08-11"
-                ),
-                "profile": "HUMAN",
-                "location": {
-                    "name": "Москва",
-                    "region": "Москва",
-                    "country": "Россия",
-                    "latitude": 55.7558,
-                    "longitude": 37.6173,
-                },
-            }
-        ],
-    }
+    "success": True,
+    "data": [
+        {
+            "id": 42,
+            "created_at": (
+                "2026-08-11T16:00:00"
+            ),
+            "assessment_date": (
+                "2026-08-11"
+            ),
+            "profile": "HUMAN",
+            "location": {
+                "name": "Москва",
+                "region": "Москва",
+                "country": "Россия",
+            },
+            "source": "REAL",
+        }
+    ],
+}
 
 
 def test_get_assessment_returns_stored_full_assessment(
@@ -449,20 +448,119 @@ def test_get_assessment_returns_stored_full_assessment(
     body = response.get_json()
 
     assert response.status_code == 200
-    assert body["success"] is True
-    assert body["data"]["id"] == 42
+
+    assert body == {
+        "success": True,
+        "data": {
+            "id": 42,
+            "created_at": (
+                "2026-08-11T16:00:00"
+            ),
+            "assessment_date": (
+                "2026-08-11"
+            ),
+            "profile": "HUMAN",
+            "location": {
+                "name": "Москва",
+                "region": "Москва",
+                "country": "Россия",
+                "latitude": 55.7558,
+                "longitude": 37.6173,
+            },
+            "source": "REAL",
+            "historical_start_date": (
+                "2026-05-01"
+            ),
+            "input_snapshot": {
+                "current_weather": {
+                    "observed_at": (
+                        "2026-08-11T12:00:00"
+                    ),
+                    "temperature": 25.5,
+                    "humidity": 65.0,
+                    "precipitation": 0.0,
+                    "wind_speed": 2.0,
+                    "soil_temperature": 18.0,
+                    "soil_temperature_6cm": 16.0,
+                    "soil_temperature_18cm": 10.0,
+                },
+                "soil_temperature_10cm_estimate": {
+                    "depth_cm": 10.0,
+                    "temperature": 14.0,
+                    "source_depths_cm": [
+                        6.0,
+                        18.0,
+                    ],
+                    "source_temperatures": [
+                        16.0,
+                        10.0,
+                    ],
+                    "method": (
+                        "LINEAR_INTERPOLATION"
+                    ),
+                },
+                "degree_days_10c": {
+                    "base_temperature": 10.0,
+                    "total": 10.0,
+                    "period_start": (
+                        "2026-05-01"
+                    ),
+                    "period_end": (
+                        "2026-05-01"
+                    ),
+                    "observations": [
+                        {
+                            "date": (
+                                "2026-05-01"
+                            ),
+                            "mean_temperature": 20.0,
+                        }
+                    ],
+                    "method": (
+                        "DAILY_MEAN_ABOVE_BASE"
+                    ),
+                },
+                "saturation_deficit_mm_hg": 1.25,
+                "historical_observations": [
+                    {
+                        "date": (
+                            "2026-05-01"
+                        ),
+                        "mean_temperature": 20.0,
+                    }
+                ],
+            },
+            "risk_results": [
+                {
+                    "threat_code": "TICK",
+                    "status": "CALCULATED",
+                    "risk_level": "HIGH",
+                    "factors": [
+                        {
+                            "factor": (
+                                "AIR_TEMPERATURE"
+                            ),
+                            "state": "MATCHED",
+                            "actual_value": 25.5,
+                            "expected": ">= 10 °C",
+                            "explanation": (
+                                "Matched."
+                            ),
+                            "required": True,
+                        }
+                    ],
+                    "explanation": (
+                        "Calculated."
+                    ),
+                }
+            ],
+        },
+    }
 
     assert (
         history_service.received_assessment_id
         == 42
     )
-
-    assert (
-        body["data"]["input_snapshot"]
-        ["degree_days_10c"]["method"]
-        == "DAILY_MEAN_ABOVE_BASE"
-    )
-
 
 def test_get_unknown_assessment_returns_404(
     api_client,

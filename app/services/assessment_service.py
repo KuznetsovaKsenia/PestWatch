@@ -4,6 +4,7 @@ from datetime import date, datetime
 from app.domain import (
     Assessment,
     AssessmentInputSnapshot,
+    AssessmentSource,
     Location,
     RiskResult,
     UserProfile,
@@ -29,6 +30,7 @@ class AssessmentService:
         input_snapshot: AssessmentInputSnapshot,
         risk_results: tuple[RiskResult, ...],
         historical_start_date: date | None = None,
+        source: AssessmentSource = AssessmentSource.REAL,
     ) -> Assessment:
         assessment = Assessment(
             id=None,
@@ -41,6 +43,7 @@ class AssessmentService:
             ),
             input_snapshot=input_snapshot,
             risk_results=risk_results,
+            source=source,
         )
 
         return self._repository.save(

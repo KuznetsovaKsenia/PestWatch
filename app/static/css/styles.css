@@ -1305,3 +1305,541 @@ select {
     text-decoration:underline;
     opacity:1;
 }
+
+/* ============================================================
+   EPIC 14 / SLICE 14.4A — ASSESSMENT HISTORY
+   ============================================================ */
+
+.history-page{
+    display:grid;
+    gap:18px;
+}
+
+.history-page .section-heading{
+    margin-bottom:0;
+}
+
+.history-page .section-heading h1{
+    margin:0;
+    font-size:clamp(28px,4vw,38px);
+    line-height:1.1;
+}
+
+.history-page .section-heading>p:last-child{
+    margin:7px 0 0;
+    color:var(--muted);
+    font-size:15px;
+}
+
+.history-list{
+    display:grid;
+    gap:12px;
+}
+
+.history-card{
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(360px,1fr);
+    align-items:center;
+    gap:22px;
+    padding:16px 18px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+}
+
+.history-card__main{
+    min-width:0;
+}
+
+.history-card__heading{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.history-card__heading h2{
+    margin:0;
+    font-size:19px;
+}
+
+.history-card__location{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.history-source{
+    display:inline-flex;
+    align-items:center;
+    padding:4px 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.history-source--real{
+    color:#286237;
+    background:#e4f2e7;
+}
+
+.history-source--demo{
+    color:#6c5b16;
+    background:#f7efc9;
+}
+
+.history-card__meta{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin:0;
+}
+
+.history-card__meta-item{
+    min-width:0;
+}
+
+.history-card__meta-item dt{
+    margin:0 0 2px;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:600;
+}
+
+.history-card__meta-item dd{
+    margin:0;
+    color:var(--text);
+    font-size:13px;
+    font-weight:700;
+}
+
+.history-empty{
+    max-width:620px;
+    padding:24px;
+}
+
+.history-empty h2{
+    margin:0 0 6px;
+}
+
+.history-empty p{
+    margin:0;
+    color:var(--muted);
+}
+
+.history-empty__action{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:16px;
+    text-decoration:none;
+}
+
+@media(max-width:800px){
+    .history-card{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+}
+
+@media(max-width:600px){
+    .history-card{
+        padding:14px;
+    }
+
+    .history-card__meta{
+        grid-template-columns:1fr;
+        gap:8px;
+    }
+
+    .history-card__meta-item{
+        display:flex;
+        align-items:baseline;
+        justify-content:space-between;
+        gap:14px;
+        padding-top:7px;
+        border-top:1px solid #e9eee8;
+    }
+
+    .history-card__meta-item dt,
+    .history-card__meta-item dd{
+        text-align:right;
+    }
+
+    .history-card__meta-item dt{
+        text-align:left;
+    }
+}
+
+/* ============================================================
+   EPIC 14 / SLICE 14.4B-1 — HISTORY DETAIL SHELL
+   ============================================================ */
+
+.history-card{
+    grid-template-columns:
+        minmax(0,1.2fr)
+        minmax(360px,1fr)
+        auto;
+}
+
+.history-card__actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+}
+
+.history-card__open{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:7px 13px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--accent);
+    background:var(--surface);
+    font-size:12px;
+    font-weight:700;
+    text-decoration:none;
+    white-space:nowrap;
+}
+
+.history-card__open:hover{
+    border-color:var(--accent);
+}
+
+.history-detail{
+    display:grid;
+    gap:22px;
+}
+
+.history-detail__back a{
+    color:var(--accent);
+    font-size:13px;
+    font-weight:700;
+    text-decoration:none;
+}
+
+.history-detail__back a:hover{
+    text-decoration:underline;
+}
+
+.history-detail__header{
+    display:grid;
+    grid-template-columns:
+        minmax(0,1fr)
+        minmax(360px,0.8fr);
+    gap:28px;
+    align-items:end;
+    padding:22px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+}
+
+.history-detail__title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.history-detail__title h1{
+    margin:0;
+    font-size:32px;
+    line-height:1.1;
+}
+
+.history-detail__location{
+    margin:6px 0 0;
+    color:var(--muted);
+}
+
+.history-detail__meta{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
+    margin:0;
+}
+
+.history-detail__meta dt{
+    margin-bottom:3px;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:600;
+}
+
+.history-detail__meta dd{
+    margin:0;
+    font-size:13px;
+    font-weight:700;
+}
+
+.history-detail__results{
+    display:grid;
+    gap:14px;
+}
+
+.history-risk-list{
+    display:grid;
+    gap:12px;
+}
+
+.history-risk-card{
+    padding:18px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+}
+
+.history-risk-card__head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+}
+
+.history-risk-card__head h3{
+    margin:0;
+    font-size:18px;
+}
+
+.history-risk-card__status{
+    display:block;
+    margin-top:4px;
+    color:var(--muted);
+    font-size:11px;
+}
+
+.history-risk-card__explanation{
+    margin:12px 0 0;
+    color:var(--text);
+    font-size:13px;
+    line-height:1.5;
+}
+
+.history-detail__note{
+    padding:14px 16px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#f7faf7;
+}
+
+.history-detail__note strong{
+    font-size:12px;
+}
+
+.history-detail__note p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+}
+
+@media(max-width:900px){
+    .history-card{
+        grid-template-columns:1fr;
+    }
+
+    .history-card__actions{
+        justify-content:flex-start;
+    }
+
+    .history-detail__header{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+    .history-detail__meta{
+        grid-template-columns:1fr;
+        gap:8px;
+    }
+
+    .history-risk-card__head{
+        flex-direction:column;
+    }
+}
+
+/* ============================================================
+   EPIC 14 / SLICE 14.4B-2 — PERSISTED EVIDENCE DETAIL
+   ============================================================ */
+
+.history-evidence{
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+}
+
+.history-evidence>h4{
+    margin:0 0 10px;
+    font-size:13px;
+}
+
+.history-factor-list{
+    display:grid;
+    gap:8px;
+}
+
+.history-factor{
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:#f8faf8;
+}
+
+.history-factor__head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+}
+
+.history-factor__head strong{
+    font-size:12px;
+}
+
+.history-factor__head span{
+    font-size:10px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.history-factor--matched .history-factor__head span{
+    color:#286237;
+}
+
+.history-factor--not_matched .history-factor__head span{
+    color:#8a5524;
+}
+
+.history-factor--missing .history-factor__head span{
+    color:var(--muted);
+}
+
+.history-factor__values{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin:10px 0 0;
+}
+
+.history-factor__values div{
+    min-width:0;
+}
+
+.history-factor__values dt{
+    color:var(--muted);
+    font-size:10px;
+}
+
+.history-factor__values dd{
+    margin:2px 0 0;
+    font-size:12px;
+    font-weight:700;
+}
+
+.history-factor>p{
+    margin:10px 0 0;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.45;
+}
+
+.history-snapshot{
+    display:grid;
+    gap:14px;
+}
+
+.history-snapshot__grid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+
+.history-evidence-card{
+    padding:16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+}
+
+.history-evidence-card h3{
+    margin:0 0 12px;
+    font-size:15px;
+}
+
+.history-data-list{
+    display:grid;
+    gap:0;
+    margin:0;
+}
+
+.history-data-list>div{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:18px;
+    padding:7px 0;
+    border-bottom:1px solid #edf0ed;
+}
+
+.history-data-list>div:last-child{
+    border-bottom:0;
+}
+
+.history-data-list dt{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.history-data-list dd{
+    margin:0;
+    font-size:12px;
+    font-weight:700;
+    text-align:right;
+}
+
+.history-evidence-card__note{
+    margin:10px 0 0;
+    padding-top:9px;
+    border-top:1px solid #edf0ed;
+    color:var(--muted);
+    font-size:10px;
+    line-height:1.45;
+}
+
+@media(max-width:800px){
+    .history-snapshot__grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+    .history-factor__head{
+        flex-direction:column;
+        gap:5px;
+    }
+
+    .history-factor__values{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .history-data-list>div{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:2px;
+    }
+
+    .history-data-list dd{
+        text-align:left;
+    }
+}
