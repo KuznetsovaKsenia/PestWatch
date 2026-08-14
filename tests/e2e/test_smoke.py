@@ -21,7 +21,7 @@ def test_home_page_opens_in_browser(
     assert response.ok
 
     expect(page).to_have_title(
-        "Оценка риска — PestWatch"
+        "PestWatch - Оценка риска вредных насекомых"
     )
 
     expect(
